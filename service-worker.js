@@ -1,10 +1,9 @@
-var CACHE = 'dsa-hub-v2';
+var CACHE = 'dsa-hub-v3';
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(CACHE).then(function (cache) {
       return cache.addAll([
-        './',
         './index.html',
         './icon-192.png',
         './icon-512.png'
@@ -28,18 +27,17 @@ self.addEventListener('activate', function (event) {
 self.addEventListener('fetch', function (event) {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then(function (cached) {
-      if (cached) return cached;
-      return fetch(event.request).then(function (response) {
-        if (response && response.status === 200) {
-          var clone = response.clone();
-          caches.open(CACHE).then(function (cache) {
-            cache.put(event.request, clone);
-          });
-        }
-        return response;
-      }).catch(function () {
-        return caches.match('./index.html');
+    fetch(event.request, { cache: 'no-store' }).then(function (response) {
+      if (response && response.status === 200) {
+        var clone = response.clone();
+        caches.open(CACHE).then(function (cache) {
+          cache.put(event.request, clone);
+        });
+      }
+      return response;
+    }).catch(function () {
+      return caches.match(event.request).then(function (cached) {
+        return cached || caches.match('./index.html');
       });
     })
   );
