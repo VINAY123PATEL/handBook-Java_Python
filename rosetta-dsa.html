@@ -4185,6 +4185,240 @@ result = sorted(map(str.upper,
 extra:"<b>Mapping:</b> <code>filter()</code> = <code>[x for x in ... if cond]</code>, <code>map()</code> = <code>[expr for x in ...]</code>, <code>sorted()</code> = <code>.sorted()</code>, <code>collect()</code> = <code>list()</code>. Java streams lazy hain; comprehension eager. DSA mein comprehension hi use hota hai mostly."
 },
 
+{cat:"Java Extras", title:"Enums — Constant Groups", note:"Java enum = strongly-typed constant group (compile-time safe). Python 3.4+ ka <code>Enum</code> same kaam karta hai — names ko auto/auto numbers milte hain, iteration aur lookup dono supported.",
+type:"code",
+java:`// Java enum — class jaisa hi powerful
+enum Day {
+    MON("Monday"), TUE("Tuesday"), SAT("Saturday");
+    private final String full;
+    Day(String full) { this.full = full; }  // constructor
+    public String full() { return full; }
+}
+
+Day d = Day.MON;
+d.name();        // "MON"
+d.ordinal();     // 0 (order)
+Day.valueOf("TUE");  // lookup by name
+
+// iteration
+for (Day x : Day.values()) { ... }
+
+// switch enum
+switch (d) {
+    case MON: ... break;
+    default: ...
+}`,
+python:`from enum import Enum
+
+class Day(Enum):
+    MON = 1
+    TUE = 2
+    SAT = 6
+
+d = Day.MON
+d.name        # "MON"
+d.value       # 1
+Day(6)        # lookup by value -> Day.SAT
+Day["TUE"]    # lookup by name -> Day.TUE
+
+for x in Day:
+    print(x)   # iterate all members
+
+# function-call syntax
+if d is Day.MON: ...`,
+extra:"<b>Interview:</b> enum comparison hamesha <code>==</code> / <code>is</code> se — string se compare mat karo (typo = bug). Python <code>IntEnum</code> = int ke saath compatible, <code>auto()</code> = khud numbering. Java enum extra fields + methods le sakta hai."
+},
+
+{cat:"Java Extras", title:"Date & Time API", note:"Java 8+ ka <code>java.time</code> — LocalDate/LocalTime immutable hain. Python ka <code>datetime</code> module same kaam karta hai. Dono mein timezone handling important hai.",
+type:"code",
+java:`import java.time.*;
+
+LocalDate today = LocalDate.now();
+LocalDate d = LocalDate.of(2024, 5, 10);
+d.plusDays(5);         // 15 May
+d.minusMonths(1);      // 10 Apr
+d.isAfter(today);      // false
+
+LocalDateTime now = LocalDateTime.now();
+now.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+
+// difference
+long days = ChronoUnit.DAYS.between(d, today);
+
+// timestamp (epoch millis)
+long millis = System.currentTimeMillis();`,
+python:`from datetime import datetime, date, timedelta
+
+today = date.today()
+d = date(2024, 5, 10)
+d + timedelta(days=5)        # 15 May
+d - timedelta(days=30)       # 10 Apr
+d > today                    # False
+
+now = datetime.now()
+now.strftime("%d-%m-%Y")     # formatting
+
+# difference
+diff = today - d             # timedelta
+diff.days
+
+# timestamp (epoch seconds)
+ts = datetime.now().timestamp()`,
+extra:"<b>Interview:</b> Java <code>SimpleDateFormat</code> thread-safe nahi hai (shared static use mat karo) — <code>DateTimeFormatter</code> safe hai. Python <code>strftime</code> codes: <code>%Y</code>=year, <code>%m</code>=month, <code>%d</code>=day. Timezone: Java <code>ZonedDateTime</code>, Python <code>datetime.now(timezone.utc)</code>."
+},
+
+{cat:"Java Extras", title:"Big Numbers — Precision", note:"Java int/long overflow se bachne ke liye <code>BigInteger</code> (unlimited) aur exact decimal ke liye <code>BigDecimal</code>. Python ka int unlimited hai (auto), <code>Decimal</code> exact decimals deta hai.",
+type:"code",
+java:`import java.math.BigInteger;
+import java.math.BigDecimal;
+
+BigInteger a = new BigInteger("99999999999999999999");
+BigInteger b = BigInteger.valueOf(2);
+BigInteger sum = a.add(b);          // add, subtract, multiply, divide
+
+BigDecimal x = new BigDecimal("0.1");
+BigDecimal y = new BigDecimal("0.2");
+x.add(y).doubleValue();              // 0.3 (exact!)
+
+double a2 = 0.1 + 0.2;               // 0.30000000000000004 bug!
+
+// compare
+a.compareTo(b);                      // -1, 0, 1`,
+python:`# int is unlimited — koi overflow nahi
+a = 99999999999999999999
+b = 2
+print(a + b)                         # 100000000000000000001
+
+from decimal import Decimal
+x = Decimal("0.1")
+y = Decimal("0.2")
+print(x + y)                         # 0.3 exact
+
+# float floating-point bug
+print(0.1 + 0.2)                     # 0.30000000000000004
+
+# precision set karo
+from decimal import getcontext
+getcontext().prec = 28`,
+extra:"<b>Interview:</b> money/precision problems mein <code>double</code> kabhi use mat karo — <code>BigDecimal</code> (Java) / <code>Decimal</code> (Python) lo. Large factorials/combinations (nCr) mein <code>BigInteger</code>/Python int zaroori. <code>compareTo()</code> = <code>==</code> ka safe version."
+},
+
+{cat:"Java Extras", title:"Optional — Null Handling", note:"Java <code>Optional</code> = null ko explicitly represent karna (null-pointer se bachna). Python mein None hota hai — <code>is None</code> check se. Dono ka goal: 'value ho ya na ho' ko type-safe tarike se handle karna.",
+type:"code",
+java:`import java.util.Optional;
+
+Optional<String> name = Optional.of("Vinay");
+Optional<String> empty = Optional.empty();
+
+// null-safe access
+name.isPresent();             // true
+name.get();                   // "Vinay"
+name.orElse("Guest");         // default
+name.orElseThrow(() -> new IllegalStateException());
+
+// map / filter chain (stream jaisa)
+name.map(String::toUpperCase).orElse("?");
+
+// Optional.ofNullable(userName) — null ho sakta hai
+Optional<String> v = Optional.ofNullable(getName());`,
+python:`# None is the "Optional" — explicit check
+name = "Vinay"          # ya None
+if name is None:
+    v = "Guest"
+else:
+    v = name
+
+# walrus / conditional (one-liner)
+v = name or "Guest"          # "" bhi fallback hoga
+
+# safe navigation via getattr
+d.get("key", "default")
+
+# py3.10+: match None pattern
+match name:
+    case None: v = "Guest"
+    case _:    v = name`,
+extra:"<b>Interview:</b> <code>orElse</code> eager hai (hamesha evaluate), <code>orElseGet</code> lazy. Python <code>or</code> sirf falsy (None, \"\", 0, []) pe fallback deta hai — <code>is None</code> strict check chahiye toh use that. Java Optional koi serializable nahi, field me rakhna anti-pattern hai."
+},
+
+{cat:"Java Extras", title:"Records & var — Boilerplate Katao", note:"Java 16+ ka <code>record</code> = immutable data class — toString/equals/hashCode auto ban jaate hain. Python ka <code>@dataclass</code> same kaam karta hai. <code>var</code> (Java 10+) = type inference ka chhota sa shortcut.",
+type:"code",
+java:`// record — immutable data carrier (Java 16+)
+record Point(int x, int y) { }
+Point p = new Point(3, 4);
+p.x();           // accessor (p.x() nahi p.x)
+p.toString();    // Point[x=3, y=4] auto
+
+// compact constructor — validation
+record User(String name, int age) {
+    User {
+        if (age < 0) throw new IllegalArgumentException();
+    }
+}
+
+// var — local type inference (Java 10+)
+var list = new ArrayList<String>();   // type inferred`,
+python:`from dataclasses import dataclass
+
+@dataclass
+class Point:
+    x: int
+    y: int
+
+p = Point(3, 4)
+p.x                  # attribute
+str(p)               # Point(x=3, y=4) auto
+
+# frozen=True = immutable (record jaisa)
+@dataclass(frozen=True)
+class User:
+    name: str
+    age: int
+    def __post_init__(self):
+        if self.age < 0:
+            raise ValueError("age < 0")`,
+extra:"<b>Interview:</b> record immutable hai — fields <code>private final</code>. Python <code>@dataclass(frozen=True)</code> = immutable, <code>@dataclass(order=True)</code> = comparison methods auto. Records/dataclasses map/serialization ke liye ideal hain."
+},
+
+{cat:"Java Extras", title:"Method References & Function Passing", note:"Java method reference <code>::</code> — lambda ka chhota form (System.out::println = x -> System.out.println(x)). Python mein functions pehle class citizens hain — directly pass karo, lambda optional.",
+type:"code",
+java:`import java.util.*;
+import java.util.function.*;
+
+// method reference: Class::method
+List<String> names = Arrays.asList("a", "bb", "ccc");
+names.sort(String::compareTo);            // :: = lambda shortcut
+names.forEach(System.out::println);       // (x) -> println(x)
+
+// function interfaces
+Function<String, Integer> f = String::length;
+f.apply("abc");                           // 3
+
+Supplier<Double> r = Math::random;
+BiFunction<Integer,Integer,Integer> add =
+    (a, b) -> a + b;                      // lambda`,
+python:`# functions are first-class — direct pass
+names = ["a", "bb", "ccc"]
+names.sort(key=len)            # len = function reference
+print(*names, sep="\\n")        # for-each
+
+# lambda / named function dono OK
+f = len
+f("abc")                        # 3
+
+import random, math
+import functools
+
+nums = [1, 2, 3]
+sum(nums)                       # built-in hi function hai
+
+# partial — function + fixed args (curry jaisa)
+add = lambda a, b: a + b
+add5 = functools.partial(add, 5)
+add5(3)                         # 8`,
+extra:"<b>Interview:</b> Java mein method reference 4 types hain — <code>Instance::method</code>, <code>Class::staticMethod</code>, <code>Class::instanceMethod</code>, <code>Class::new</code> (constructor). Python mein sab simple function references hain. <code>functools.partial</code> = Java currying ke nearest cousin."
+},
+
 {cat:"Java Extras", title:"Sawaal 16 — Java Extras ke Questions", note:"Java-specific concepts (JVM, switch, generics, exceptions) test karo.",
 type:"quiz",
 questions:[
@@ -4554,6 +4788,143 @@ python:`class Student:
     def __len__(self):        # len(obj) works
         return len(self.name)`,
 extra:"<b>Dunder mapping:</b> <code>__init__</code>=constructor, <code>__str__</code>=toString, <code>__eq__</code>=equals, <code>__repr__</code>=debug print. Instance method ko self chahiye, @staticmethod nahi, @classmethod ko cls milta. Ye OOP interview ke staple hain."
+},
+
+{cat:"Python Extras", title:"datetime — Time Handling", note:"Python ka <code>datetime</code> module Java 8+ ke <code>java.time</code> jaisa hi hai — date, time aur timedelta sab immutable. Formatting <code>strftime</code> se, parsing <code>strptime</code> se.",
+type:"code",
+java:`import java.time.*;
+
+LocalDate d = LocalDate.of(2024, 5, 10);
+d.plusDays(5);             // 15 May
+LocalDate today = LocalDate.now();
+d.isAfter(today);          // false
+long days = ChronoUnit.DAYS.between(d, today);
+
+LocalDateTime now = LocalDateTime.now();
+now.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"));`,
+python:`from datetime import date, datetime, timedelta
+
+d = date(2024, 5, 10)
+d + timedelta(days=5)       # 15 May
+today = date.today()
+d > today                   # False
+diff = today - d            # timedelta
+diff.days                   # difference in days
+
+now = datetime.now()
+now.strftime("%d-%m-%Y %H:%M")   # format
+dt = datetime.strptime("10-05-2024", "%d-%m-%Y")  # parse
+
+# Unix timestamp
+from datetime import timezone
+epoch = now.timestamp()          # float seconds`,
+extra:"<b>Interview:</b> <code>strftime</code> codes: <code>%Y</code>=year, <code>%m</code>=month, <code>%d</code>=day, <code>%H</code>=hour, <code>%M</code>=minute, <code>%S</code>=second. Java <code>SimpleDateFormat</code> thread-safe nahi (shared static = bug), <code>DateTimeFormatter</code> safe hai. Timezone: Java <code>ZonedDateTime</code>, Python <code>datetime.now(timezone.utc)</code>."
+},
+
+{cat:"Python Extras", title:"random — Numbers & Shuffling", note:"Python <code>random</code> module — Java ke <code>java.util.Random</code> ka equivalent. DSA mein shuffle, sample, random index ye sab mock tests aur online judges ke liye kaam aate hain.",
+type:"code",
+java:`import java.util.*;
+
+Random r = new Random();
+r.nextInt();                 // any int
+r.nextInt(10);               // 0..9
+r.nextInt(6) + 1;            // 1..6 (dice)
+r.nextDouble();              // 0.0..1.0
+r.nextBoolean();
+
+// shuffle a list
+List<Integer> l = new ArrayList<>(List.of(1,2,3,4));
+Collections.shuffle(l, r);`,
+python:`import random
+
+random.randint(1, 6)         # 1..6 (dice) inclusive
+random.randrange(10)         # 0..9
+random.choice([1,2,3])       # random element
+random.uniform(0.0, 1.0)     # float 0..1
+random.random()              # float 0.0..1.0
+
+# sampling & shuffle
+random.sample([1,2,3,4], 2)  # 2 unique items
+random.shuffle([1,2,3,4])    # in-place shuffle
+import secrets               # security ke liye
+secrets.randbelow(10)`,
+extra:"<b>Interview:</b> Java <code>ThreadLocalRandom.current()</code> multi-threaded code mein use karo (fast, no shared state). Python <code>random.shuffle</code> in-place hai, <code>sample</code> bina duplicate. Security/OTP ke liye <code>random</code> nahi — <code>secrets</code> module (cryptographically secure)."
+},
+
+{cat:"Python Extras", title:"functools & itertools — Power Tools", note:"Python ke 2 power modules — Java ka koi exact equivalent nahi par streams + Collections se mile-jhule kaam karte hain. <code>itertools</code> = lazy combinators, <code>functools</code> = function utilities.",
+type:"code",
+java:`// Java equivalents (manual / streams)
+List<Integer> nums = List.of(1, 2, 3);
+
+// permutations/combinations: koi built-in nahi
+// manually recursion se karna padta
+
+// accumulate (prefix sum) — stream
+int[] pref = new int[3];
+int run = 0;
+for (int i = 0; i < 3; i++)
+    pref[i] = (run += nums.get(i));
+
+// partial (curry) — manual lambda
+java.util.function.Function<Integer,Integer> add5 =
+    x -> x + 5;`,
+python:`from itertools import product, permutations, combinations, accumulate, chain, groupby
+import functools
+
+list(product([1,2],[3,4]))        # [(1,3),(1,4),(2,3),(2,4)]
+list(permutations([1,2,3], 2))    # order matter
+list(combinations([1,2,3], 2))    # order nahi matter
+list(accumulate([1,2,3,4]))       # prefix sum [1,3,6,10]
+list(chain([1,2],[3,4]))          # flat combine
+
+# groupby — sorted input pe groups
+from itertools import groupby
+for k, g in groupby("aaabbbcc"):
+    print(k, list(g))
+
+# functools
+from functools import partial, reduce, lru_cache
+add = lambda a, b: a + b
+add5 = partial(add, 5); add5(3)   # 8
+reduce(lambda a,b: a+b, [1,2,3])  # 6`,
+extra:"<b>Interview:</b> <code>product</code> = nested loops ka shortcut, <code>permutations</code>/<code>combinations</code> = backtracking ka shortcut (small n), <code>accumulate</code> = prefix sums, <code>groupby</code> = sorted data groups. Backtracking questions (subsets, permutations) mein ye test-case generator bante hain."
+},
+
+{cat:"Python Extras", title:"CSV & Data Files", note:"CSV = tabular data ka universal format. Python ka <code>csv</code> module built-in hai. Java mein <code>BufferedReader</code> se manual parsing ya external lib (OpenCSV/Apache Commons) — Python zyada clean hai.",
+type:"code",
+java:`// Java — manual CSV parsing
+try (BufferedReader br = new BufferedReader(
+        new FileReader("data.csv"))) {
+    String line;
+    while ((line = br.readLine()) != null) {
+        String[] parts = line.split(",");
+        System.out.println(parts[0]);
+    }
+} catch (IOException e) { e.printStackTrace(); }`,
+python:`import csv
+
+# read
+with open("data.csv") as f:
+    for row in csv.reader(f):      # list per row
+        print(row[0])
+
+# dict reader — header se keys
+with open("data.csv") as f:
+    for row in csv.DictReader(f):
+        print(row["name"])
+
+# write
+with open("out.csv", "w", newline="") as f:
+    w = csv.writer(f)
+    w.writerow(["name", "age"])
+    w.writerow(["Vinay", 20])
+
+# DictWriter
+with open("out.csv", "w", newline="") as f:
+    w = csv.DictWriter(f, fieldnames=["name", "age"])
+    w.writeheader()
+    w.writerow({"name": "Vinay", "age": 20})`,
+extra:"<b>Interview:</b> <code>csv.reader</code> = list rows, <code>DictReader</code> = dict rows (header = keys). Comma-ke-andar-comma handle <code>csv</code> module khud karta hai — manual <code>split(\",\")</code> bugs deta hai. Java <code>split(\",\")</code> quoted fields pe fail hota hai — OpenCSV use karo."
 },
 
 {cat:"Python Extras", title:"Sawaal 17 — Python Extras ke Questions", note:"Comprehensions, generators, decorators, scope test karo.",
