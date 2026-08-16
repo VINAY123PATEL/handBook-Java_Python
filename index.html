@@ -117,6 +117,9 @@
     color:#0b0e13; font-weight:700; border:none;
     background:linear-gradient(135deg,var(--java),var(--py-yellow));
   }
+  .lock-cp-link{ margin-top:16px; }
+  .lock-cp-link a{ color:var(--py-yellow); text-decoration:none; cursor:pointer; font-size:12.5px; }
+  .lock-cp-link a:hover{ text-decoration:underline; }
   .lock-err{ color:#ff6b6b; font-family:'JetBrains Mono',monospace; font-size:12px; min-height:18px; margin-top:10px; }
   .foot a{ color:var(--py-yellow); text-decoration:none; cursor:pointer; }
   .foot a:hover{ text-decoration:underline; }
@@ -183,12 +186,13 @@
 <div class="lock" id="lock">
     <div class="lock-box">
       <h2>App Locked</h2>
-      <p>Neeche password daal kar UNLOCK dabao. Pehli baar unlock karne ke baad app hamesha khula rahega.</p>
+      <p>Neeche password daal kar UNLOCK dabao. Har baar app kholne par password dena hoga.</p>
       <input type="password" id="lockPass" placeholder="Password" autocomplete="off">
       <div class="lock-err" id="lockErr"></div>
       <div class="lock-row">
         <button class="lock-btn ok" id="lockBtn">UNLOCK</button>
       </div>
+      <p class="lock-cp-link"><a id="lockChangePass">Change Password</a></p>
     </div>
   </div>
 
@@ -210,9 +214,83 @@
 
 <script>
 (function () {
-  var DEFAULT_PIN = '7067420802';
+  function sha256(ascii) {
+    function rightRotate(value, amount) {
+      return (value >>> amount) | (value << (32 - amount));
+    }
+    var mathPow = Math.pow;
+    var maxWord = mathPow(2, 32);
+    var lengthProperty = 'length';
+    var i, j;
+    var result = '';
+    var words = [];
+    var asciiBitLength = ascii[lengthProperty] * 8;
+
+    var hash = sha256.h = sha256.h || [];
+    var k = sha256.k = sha256.k || [];
+    var primeCounter = k[lengthProperty];
+
+    var isComposite = {};
+    for (var candidate = 2; primeCounter < 64; candidate++) {
+      if (!isComposite[candidate]) {
+        for (i = 0; i < 313; i += candidate) {
+          isComposite[i] = candidate;
+        }
+        hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+        k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+      }
+    }
+
+    ascii += '\x80';
+    while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
+    for (i = 0; i < ascii[lengthProperty]; i++) {
+      j = ascii.charCodeAt(i);
+      if (j >> 8) return;
+      words[i >> 2] |= j << ((3 - i) % 4) * 8;
+    }
+    words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+    words[words[lengthProperty]] = (asciiBitLength);
+
+    for (j = 0; j < words[lengthProperty];) {
+      var w = words.slice(j, j += 16);
+      var oldHash = hash.slice(0, 8);
+
+      for (i = 0; i < 64; i++) {
+        var w15 = w[i - 15], w2 = w[i - 2];
+        var a = hash[0], e = hash[4];
+        var temp1 = hash[7]
+          + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+          + ((e & hash[5]) ^ ((~e) & hash[6]))
+          + k[i]
+          + (w[i] = (i < 16) ? w[i] : (
+              w[i - 16]
+              + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+              + w[i - 7]
+              + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+            ) | 0);
+        var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+          + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+
+        hash = [(temp1 + temp2) | 0].concat(hash);
+        hash[4] = (hash[4] + temp1) | 0;
+      }
+
+      for (i = 0; i < 8; i++) {
+        hash[i] = (hash[i] + oldHash[i]) | 0;
+      }
+    }
+
+    for (i = 0; i < 8; i++) {
+      for (j = 3; j + 1; j--) {
+        var b = (hash[i] >> (j * 8)) & 255;
+        result += ((b < 16) ? 0 : '') + b.toString(16);
+      }
+    }
+    return result;
+  }
+
+  var DEFAULT_PIN_HASH = '0fe013f1f972bf5337b5ecb5a829092c3b645047c62a20d23946ac1d6446d547';
   var PIN_KEY = 'dsa_pin';
-  var UNLOCK_KEY = 'dsa_unlocked';
 
   var mem = {};
   var storeOk = true;
@@ -228,7 +306,12 @@
     mem[k] = v;
   }
 
-  function getPin() { return sget(PIN_KEY) || DEFAULT_PIN; }
+  function matchesPin(input) {
+    var stored = sget(PIN_KEY);
+    if (!stored) return sha256(input) === DEFAULT_PIN_HASH;
+    if (/^[0-9a-f]{64}$/.test(stored)) return sha256(input) === stored;
+    return input === stored;
+  }
   function show(el) { el.classList.add('show'); }
   function hide(el) { el.classList.remove('show'); }
 
@@ -237,26 +320,31 @@
   var lockPass = document.getElementById('lockPass');
   var lockBtn = document.getElementById('lockBtn');
 
-  if (sget(UNLOCK_KEY) !== '1') {
-    show(lock);
-    lockPass.focus();
-    function tryUnlock() {
-      if (lockPass.value === getPin()) {
-        sset(UNLOCK_KEY, '1');
-        hide(lock);
-      } else {
-        lockErr.textContent = 'Galat password. Dobara try karo.';
-        lockPass.value = '';
-        lockPass.focus();
-      }
+  show(lock);
+  lockPass.focus();
+  function tryUnlock() {
+    if (matchesPin(lockPass.value)) {
+      hide(lock);
+    } else {
+      lockErr.textContent = 'Galat password. Dobara try karo.';
+      lockPass.value = '';
+      lockPass.focus();
     }
-    lockBtn.addEventListener('click', tryUnlock);
-    lockPass.addEventListener('keydown', function (e) { if (e.key === 'Enter') tryUnlock(); });
   }
+  lockBtn.addEventListener('click', tryUnlock);
+  lockPass.addEventListener('keydown', function (e) { if (e.key === 'Enter') tryUnlock(); });
 
   var cp = document.getElementById('cp');
   var cpErr = document.getElementById('cpErr');
   document.getElementById('changePass').addEventListener('click', function () {
+    cpErr.textContent = '';
+    document.getElementById('cpCur').value = '';
+    document.getElementById('cpNew').value = '';
+    document.getElementById('cpNew2').value = '';
+    show(cp);
+    document.getElementById('cpCur').focus();
+  });
+  document.getElementById('lockChangePass').addEventListener('click', function () {
     cpErr.textContent = '';
     document.getElementById('cpCur').value = '';
     document.getElementById('cpNew').value = '';
@@ -270,11 +358,10 @@
     var cur = document.getElementById('cpCur').value;
     var n1 = document.getElementById('cpNew').value;
     var n2 = document.getElementById('cpNew2').value;
-    if (cur !== getPin()) { cpErr.textContent = 'Current password galat hai.'; return; }
+    if (!matchesPin(cur)) { cpErr.textContent = 'Current password galat hai.'; return; }
     if (n1.length < 4) { cpErr.textContent = 'Naya password kam se kam 4 characters ka ho.'; return; }
     if (n1 !== n2) { cpErr.textContent = 'Naya password dono jagah match nahi kar raha.'; return; }
-    sset(PIN_KEY, n1);
-    sset(UNLOCK_KEY, '1');
+    sset(PIN_KEY, sha256(n1));
     cpErr.textContent = '';
     hide(cp);
   }
