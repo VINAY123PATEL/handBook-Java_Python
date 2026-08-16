@@ -1,10 +1,12 @@
-var CACHE = 'dsa-hub-v3';
+var CACHE = 'dsa-hub-v4';
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(CACHE).then(function (cache) {
       return cache.addAll([
         './index.html',
+        './rosetta-dsa.html',
+        './leetcode-200.html',
         './icon-192.png',
         './icon-512.png'
       ]);
