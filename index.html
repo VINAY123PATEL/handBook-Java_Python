@@ -117,7 +117,6 @@
     color:#0b0e13; font-weight:700; border:none;
     background:linear-gradient(135deg,var(--java),var(--py-yellow));
   }
-  .lock-hint{ color:var(--py-yellow); font-family:'JetBrains Mono',monospace; font-size:12.5px; margin-bottom:4px; min-height:16px; }
   .lock-err{ color:#ff6b6b; font-family:'JetBrains Mono',monospace; font-size:12px; min-height:18px; margin-top:10px; }
   .foot a{ color:var(--py-yellow); text-decoration:none; cursor:pointer; }
   .foot a:hover{ text-decoration:underline; }
@@ -186,7 +185,6 @@
       <h2>App Locked</h2>
       <p>Neeche password daal kar UNLOCK dabao. Pehli baar unlock karne ke baad app hamesha khula rahega.</p>
       <input type="password" id="lockPass" placeholder="Password" autocomplete="off">
-      <div class="lock-hint" id="lockHint"></div>
       <div class="lock-err" id="lockErr"></div>
       <div class="lock-row">
         <button class="lock-btn ok" id="lockBtn">UNLOCK</button>
@@ -238,12 +236,8 @@
   var lockErr = document.getElementById('lockErr');
   var lockPass = document.getElementById('lockPass');
   var lockBtn = document.getElementById('lockBtn');
-  var lockHint = document.getElementById('lockHint');
 
   if (sget(UNLOCK_KEY) !== '1') {
-    if (!sget(PIN_KEY)) {
-      lockHint.textContent = 'Default password: ' + DEFAULT_PIN;
-    }
     show(lock);
     lockPass.focus();
     function tryUnlock() {
