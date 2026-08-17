@@ -550,7 +550,20 @@ a, b = map(int, input().split())
 # n ints ek saath list mein
 arr = list(map(int, input().split()))`,
 extra:"<b>Competitive programming flow:</b> fastest pattern hai <code>a, b = map(int, input().split())</code>. Java mein <code>sc.nextInt()</code> newline ko skip karta hai; Python <code>input()</code> hamesha <b>poori line</b> leta hai — isliye split() karke alag karna padta hai."
-},
+},{cat:"Shuruaat", title:"Scanner Methods — Full List", note:"Java Scanner ke saare input methods ek jagah. Python mein sab kuch <b>input()</b> se hota hai — hamesha String milta hai, isliye convert karna padta hai.",
+type:"table",
+headers:["Java Scanner","Python","Kya leta hai"],
+rows:[
+["<code>sc.nextLine()</code>","<code>input()</code>","Poori line (String)"],
+["<code>sc.next()</code>","<code>input().split()[0]</code>","Ek token / word"],
+["<code>sc.nextInt()</code>","<code>int(input())</code>","Integer"],
+["<code>sc.nextLong()</code>","<code>int(input())</code>","Bada integer"],
+["<code>sc.nextFloat()</code>","<code>float(input())</code>","Float"],
+["<code>sc.nextDouble()</code>","<code>float(input())</code>","Double"],
+["<code>sc.nextBoolean()</code>","<code>input().lower() == 'true'</code>","Boolean"],
+["<code>sc.hasNext()</code>","—","Koi aur token bacha hai?"],
+["<code>sc.hasNextInt()</code>","—","Agla token int hai?"]
+]},
 
 {cat:"Shuruaat", title:"Type Conversion", note:"String ↔ number ↔ char conversions — dono languages mein kaise.",
 type:"table",
@@ -564,6 +577,43 @@ rows:[
 ["char digit → int","<code>Character.getNumericValue(c)</code>","<code>int(c)</code>"],
 ["List ↔ Array","<code>toArray() / Arrays.asList()</code>","<code>list(arr)</code> / <code>tuple(l)</code>"]
 ]},
+
+{cat:"Shuruaat", title:"Type Casting — Widening & Narrowing", note:"Java mein primitive conversion do tarah: <b>widening</b> (chhota → bada, automatic) aur <b>narrowing</b> (bada → chhota, explicit cast). Python mein bas constructor call hota hai.",
+type:"code",
+java:`// widening: automatic (chhota -> bada)
+int i = 10;
+long l = i;        // int -> long (auto)
+float f = l;       // long -> float (auto)
+double d = f;      // float -> double (auto)
+
+// narrowing: explicit cast zaroori
+double x = 9.7;
+int y = (int) x;   // 9 (fraction kaat diya) ⚠️
+
+// char <-> int
+char c = 'A';
+int ascii = (int) c;      // 65
+char back = (char) 66;    // 'B'
+
+// String <-> int
+int n = Integer.parseInt("42");
+String s = String.valueOf(42);`,
+python:`# Python: sab constructor se (no cast keyword)
+i = int(9.7)       # 9 (truncate)
+f = float(10)      # 10.0
+
+# char <-> int (ASCII)
+c = chr(65)        # 'A'
+n = ord('A')       # 65
+
+# String <-> int
+n = int("42")
+s = str(42)
+
+# careful: int("3.5") -> ValueError ❌
+# use float first: int(float("3.5")) -> 3`,
+extra:"<b>Flow:</b> widening hamesha safe hai (data loss nahi) — isliye automatic. Narrowing mein data loss ho sakta hai (9.7 → 9) — isliye explicit <code>(int)</code> cast. Python mein sab kuch <code>int()</code>/<code>float()</code>/<code>str()</code> se hota hai."
+},
 
 {cat:"Shuruaat", title:"Time Complexity & Big-O (Basics)", note:"Algorithm kitni fast hai, ye batane ka standard tarika <b>Big-O notation</b> hai — input size badhne pe operations kitne grow hote hain, ye measure karta hai. Constants ignore hoti hain: <b>O(2n) = O(n)</b>, <b>O(n/2) = O(n)</b>.",
 type:"table",
@@ -676,6 +726,38 @@ can_vote = age >= 18
 if 18 <= age <= 60:
     print("Eligible")`,
 extra:"Python mein <b>chained comparison</b> <code>18 &lt;= age &lt;= 60</code> ek sath likh sakte ho — Java mein iske liye do conditions aur <code>&&</code> lagana padta. Aur Python ki <code>pass</code> statement empty block ke liye hoti hai (Java ke <code>{ }</code> jaisi)."
+},
+
+{cat:"Basics", title:"Membership & Identity Operators", note:"Python ke do special operator groups jo Java mein alag tareeke se hote hain: <b>in / not in</b> (membership) aur <b>is / is not</b> (identity).",
+type:"code",
+java:`// Java: membership = contains() / search
+boolean inList = list.contains(5);
+boolean inMap  = map.containsKey("key");
+boolean inSet  = set.contains(10);
+boolean inStr  = s.contains("lo");
+
+// Java: identity = reference compare
+// == primitives pe value, objects pe REFERENCE!
+String a = new String("hi");
+String b = new String("hi");
+a == b;              // false (alag objects) ⚠️
+a.equals(b);         // true (value) ✅`,
+python:`# membership: in / not in 🔥
+5 in [1, 2, 3]            # True
+"lo" in "hello"           # True
+"key" in {"key": 1}      # True (keys check hota hai)
+5 not in [1, 2, 3]        # False
+
+# identity: is / is not (reference)
+x = None
+x is None                # True (None check ka tarika!)
+x is not None            # False
+
+# list == vs is
+a = [1, 2]; b = [1, 2]
+a == b                   # True (value)
+a is b                   # False (alag objects)`,
+extra:"<b>None check</b> hamesha <code>is None</code> se karo, <code>== None</code> se nahi. Java mein strings compare karte waqt <code>equals()</code> use karo, <code>==</code> nahi (reference compare hota hai). Python ka <code>in</code> list pe O(n), set/dict pe O(1) hai."
 },
 
 {cat:"Basics", title:"If-Else & Ternary", note:"elif Python ka 'else if' hai. Ternary ka order bhi ulta hai — pehle value_if_true, phir condition, phir value_if_false.",
@@ -5128,6 +5210,92 @@ add5(3)                         # 8`,
 extra:"<b>Interview:</b> Java mein method reference 4 types hain — <code>Instance::method</code>, <code>Class::staticMethod</code>, <code>Class::instanceMethod</code>, <code>Class::new</code> (constructor). Python mein sab simple function references hain. <code>functools.partial</code> = Java currying ke nearest cousin."
 },
 
+{cat:"Java Extras", title:"Multithreading — Thread & Runnable", note:"Ek saath multiple tasks chalana. Java mein <b>Thread</b> class ya <b>Runnable</b> interface; Python mein <b>threading</b> module. Placement ke liye basics kaafi hain.",
+type:"code",
+java:`// 1) Thread class extend karke
+class MyThread extends Thread {
+    public void run() {
+        System.out.println("Thread chala: " + getName());
+    }
+}
+new MyThread().start();   // start() -> naya thread
+
+// 2) Runnable interface (recommended)
+Thread t = new Thread(() -> {
+    System.out.println("Runnable se");
+});
+t.start();
+t.join();                 // wait for thread
+
+// sleep
+Thread.sleep(1000);       // 1 second ruko
+
+// synchronized: ek time pe ek hi thread
+synchronized void increment() { count++; }`,
+python:`import threading, time
+
+def worker(name):
+    print(f"Thread {name} chala")
+    time.sleep(1)         # Java sleep() jaisa
+
+t1 = threading.Thread(target=worker, args=("A",))
+t1.start()
+t1.join()                 # wait
+
+# Lock = synchronized jaisa
+lock = threading.Lock()
+def safe():
+    with lock:            # critical section
+        count += 1
+
+# ThreadPoolExecutor (easy)
+from concurrent.futures import ThreadPoolExecutor
+with ThreadPoolExecutor(max_workers=4) as ex:
+    ex.map(worker, ["A", "B", "C"])`,
+extra:"<b>Flow:</b> <code>start()</code> se thread shuru hota hai (direct <code>run()</code> call mat karo — woh same thread mein chalega). <code>join()</code> = thread ke khatam hone ka wait. <b>synchronized</b> / <b>Lock</b> shared data ko race condition se bachate hain. Python ka GIL hai — CPU-heavy tasks ke liye <code>multiprocessing</code> better."
+},
+
+{cat:"Java Extras", title:"JDBC & Databases", note:"Java mein database se baat karne ka standard tarika <b>JDBC</b> hai. Python ka equivalent <b>sqlite3</b> / <b>psycopg2</b>. MERN mein aage aayega — abhi flow samjho.",
+type:"code",
+java:`// JDBC flow: connect -> statement -> query
+import java.sql.*;
+
+Connection conn = DriverManager.getConnection(
+    "jdbc:mysql://localhost/db", "user", "pass");
+
+Statement st = conn.createStatement();
+ResultSet rs = st.executeQuery("SELECT * FROM users");
+while (rs.next()) {
+    System.out.println(rs.getString("name"));
+}
+
+// PreparedStatement = SQL injection safe 🔥
+PreparedStatement ps = conn.prepareStatement(
+    "INSERT INTO users (name) VALUES (?)");
+ps.setString(1, "Vinay");
+ps.executeUpdate();
+
+conn.close();   // connection band karna mat bhoolo`,
+python:`import sqlite3
+
+conn = sqlite3.connect("app.db")   # file-based DB
+cur = conn.cursor()
+
+cur.execute("CREATE TABLE IF NOT EXISTS users (name TEXT)")
+cur.execute("INSERT INTO users VALUES (?)", ("Vinay",))
+# ? = parameterized, injection safe 🔥
+
+rows = cur.execute("SELECT * FROM users").fetchall()
+for row in rows:
+    print(row)
+
+conn.commit()   # changes save karo
+conn.close()    # band karo
+
+# CRUD: INSERT / SELECT / UPDATE / DELETE`,
+extra:"<b>CRUD</b> = Create, Read, Update, Delete — har DB ka base. <b>PreparedStatement / ?</b> hamesha use karo (SQL injection se bachata hai). Java mein <code>try-with-resources</code> connection ko auto-close karta hai."
+},
+
 {cat:"Java Extras", title:"Sawaal 16 — Java Extras ke Questions", note:"Java-specific concepts (JVM, switch, generics, exceptions) test karo.",
 type:"quiz",
 questions:[
@@ -5634,6 +5802,77 @@ with open("out.csv", "w", newline="") as f:
     w.writeheader()
     w.writerow({"name": "Vinay", "age": 20})`,
 extra:"<b>Interview:</b> <code>csv.reader</code> = list rows, <code>DictReader</code> = dict rows (header = keys). Comma-ke-andar-comma handle <code>csv</code> module khud karta hai — manual <code>split(\",\")</code> bugs deta hai. Java <code>split(\",\")</code> quoted fields pe fail hota hai — OpenCSV use karo."
+},
+
+{cat:"Python Extras", title:"APIs & HTTP — requests", note:"Backend/API work ka base — HTTP methods, status codes, JSON. Python ka <b>requests</b> module; Java ka <b>HttpClient</b>.",
+type:"code",
+java:`// Java 11+ HttpClient
+import java.net.http.*;
+import java.net.URI;
+
+HttpClient client = HttpClient.newHttpClient();
+HttpRequest req = HttpRequest.newBuilder()
+    .uri(URI.create("https://api.example.com/users"))
+    .GET().build();
+
+HttpResponse<String> res =
+    client.send(req, HttpResponse.BodyHandlers.ofString());
+System.out.println(res.statusCode());  // 200, 404...
+System.out.println(res.body());
+
+// POST with JSON
+// .POST(BodyPublishers.ofString(json))
+// + .header("Content-Type", "application/json")`,
+python:`import requests
+
+# GET
+res = requests.get("https://api.example.com/users")
+print(res.status_code)     # 200, 404, 500...
+data = res.json()          # response -> dict 🔥
+
+# POST (naya data banao)
+res = requests.post("https://api.example.com/users",
+                    json={"name": "Vinay"})
+
+# PUT (update) / DELETE
+requests.put(url, json={"name": "New"})
+requests.delete(url + "/1")
+
+# params
+requests.get(url, params={"page": 2, "limit": 10})`,
+extra:"<b>HTTP methods:</b> GET = read, POST = create, PUT = update, DELETE = delete. <b>Status codes:</b> 200 OK, 201 Created, 400 Bad Request, 401 Unauthorized, 404 Not Found, 500 Server Error. <code>res.json()</code> se API response directly dict/dict-list ban jata hai."
+},
+
+{cat:"Python Extras", title:"Async Python — asyncio", note:"I/O-bound tasks (network, file) ko bina block kiye chalana. Python mein <b>async/await</b>; Java mein <b>CompletableFuture</b>. Placement ke liye basics enough.",
+type:"code",
+java:`// Java async: CompletableFuture
+CompletableFuture.supplyAsync(() -> {
+    return fetchData();       // background thread pe
+}).thenAccept(data -> {
+    System.out.println(data); // result milte hi
+});
+
+// ya ExecutorService (thread pool)
+ExecutorService pool = Executors.newFixedThreadPool(4);
+pool.submit(() -> System.out.println("async task"));`,
+python:`import asyncio
+
+async def fetch_data(url):
+    await asyncio.sleep(1)   # I/O wait (non-blocking)
+    return f"data from {url}"
+
+async def main():
+    # do tasks PARALLEL mein 🔥
+    r1, r2 = await asyncio.gather(
+        fetch_data("api/a"),
+        fetch_data("api/b")
+    )
+    print(r1, r2)
+
+asyncio.run(main())          # entry point
+
+# real world: aiohttp / httpx for async HTTP`,
+extra:"<b>async def</b> = async function, <b>await</b> = result ka wait, <b>asyncio.gather()</b> = multiple tasks ek saath. Ye CPU-heavy ke liye nahi hai (woh multiprocessing) — I/O-bound ke liye hai. Java mein <code>CompletableFuture</code> similar kaam karta hai."
 },
 
 {cat:"Python Extras", title:"Sawaal 17 — Python Extras ke Questions", note:"Comprehensions, generators, decorators, scope test karo.",
