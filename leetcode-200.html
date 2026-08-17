@@ -7304,7 +7304,7 @@ function toggleDone(i){
 function highlightCode(src){
   var s = String(src).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   var toks = [], ti = 0;
-  function tok(h){ var id='\x00T'+(ti++)+'\x00'; toks.push([id,h]); return id; }
+  function tok(h){ var id='\x01PH'+ti+'\x01'; toks.push([id,h]); ti++; return id; }
   s = s.replace(/(\/\/[^\n]*|\/\/[^\n]*$)/g, function(m){ return tok('<span class="comment">'+m+'</span>'); });
   s = s.replace(/(#.*)/g, function(m){ return tok('<span class="comment">'+m+'</span>'); });
   s = s.replace(/(".*?"|'.*?')/g, function(m){ return tok('<span class="str">'+m+'</span>'); });

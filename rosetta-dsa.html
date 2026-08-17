@@ -530,7 +530,7 @@ rows:[
 ["Latest LTS","Java 21 (2023)"],
 ["Used in","Enterprise apps, Android, Banking, Web backends"]
 ],
-extra:"<b>Why Java?</b> C++ bahut complex tha. Java ne C++ ki power rakhi but complexity kam ki. Memory management automatic hai (garbage collection).安全性 bahut strong hai."},
+extra:"<b>Why Java?</b> C++ bahut complex tha. Java ne C++ ki power rakhi but complexity kam ki. Memory management automatic hai (garbage collection). Security bahut strong hai."},
 {cat:"01. Java & Python Introduction", title:"Python Kya Hai?", note:"Python 1991 mein bani thi Guido van Rossum ne. motto: <b>\"Batteries Included\"</b> aur <b>\"Simple is Better Than Complex\"</b>. Duniya ki sabse popular beginner language.",
 type:"table",
 headers:["Fact","Detail"],
@@ -543,7 +543,7 @@ rows:[
 ["Latest","Python 3.12 (2023)"],
 ["Used in","AI/ML, Data Science, Web, Automation, Scripts"]
 ],
-extra:"<b>Why Python?</b> Syntax bahut simple hai — padho to English lagta hai. Data Science aur AI mein king hai. Rapid prototyping ke liye best.缺点 = Java se slow hai (general purpose mein)."},
+extra:"<b>Why Python?</b> Syntax bahut simple hai — padho to English lagta hai. Data Science aur AI mein king hai. Rapid prototyping ke liye best. Disadvantage = Java se slow hai (general purpose mein)."},
 {cat:"01. Java & Python Introduction", title:"Java & Python Ka Flow — Kaise Chalte Hain?", note:"Java 2-step process: compile + run. Python 1-step: direct run. Dono ultimately machine instructions banate hain.",
 type:"code",
 java:`// JAVA KA FLOW
@@ -2670,7 +2670,7 @@ questions:[
  expl:"<code>math.gcd(a,b)</code> — import math karke. Java mein <code>BigInteger</code> ka gcd() hai, koi native math gcd nahi."}
 ]},
 
-==== CHAPTER 20 — DSA INTRODUCTION ========== */
+/* ========== CHAPTER 20 — DSA INTRODUCTION ========== */
 {cat:"20. DSA Introduction", title:"DSA Kya Hai? — Data Structures & Algorithms", note:"DSA = programming ki backbone. Data Structures = data ko organize kaise karein. Algorithms = problem solve kaise karein efficiently.",
 type:"table",
 headers:["Term","Kya Hai?","Real Life Example"],
@@ -4107,7 +4107,7 @@ def can_finish(num, pre):
         count += 1
         for nb in adj[cur]:
             in_deg[nb] -= 1
-            if inDeg[nb] == 0:
+            if in_deg[nb] == 0:
                 q.append(nb)
     return count == num`,
 extra:`<b>Kahn's Algorithm (BFS Topological Sort):</b> In-degree 0 wale nodes se start karo, process karte jaao. Agar saare nodes process ho gaye → no cycle → possible. Cycle hai → impossible. O(V+E).`},
@@ -7196,7 +7196,7 @@ function toggleDone(i){
 
 function highlightCode(code){
   var s = esc(code), toks = [], ti = 0;
-  function tok(h){ var id='\u2620'+(ti++)+'\u2620'; toks.push([id,h]); return id; }
+  function tok(h){ var id='\x01PH'+ti+'\x01'; toks.push([id,h]); ti++; return id; }
   s = s.replace(/(#.*$|\/\/.*$)/gm, function(m){ return tok('<span class="cm">'+m+'</span>'); });
   s = s.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, function(m){ return tok('<span class="str">'+m+'</span>'); });
   s = s.replace(/\b(class|def|return|if|elif|else|for|in|while|import|from|try|except|finally|new|static|void|int|double|float|char|boolean|String|long|public|private|self|None|True|False|break|continue|lambda|with|as|pass|extends|super|is)\b/g, function(m){ return tok('<span class="kw">'+m+'</span>'); });
