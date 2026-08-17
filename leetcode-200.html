@@ -7302,13 +7302,16 @@ function toggleDone(i){
 }
 
 function highlightCode(src){
-  return String(src)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/(\/\/[^\n]*|\/\/[^\n]*$)/g,'<span class="comment">$1</span>')
-    .replace(/(#.*)/g,'<span class="comment">$1</span>')
-    .replace(/(".*?"|'.*?')/g,'<span class="str">$1</span>')
-    .replace(/\b(class|def|return|if|elif|else|for|in|while|import|from|try|except|finally|new|static|void|int|double|float|char|boolean|String|long|public|private|self|None|True|False|break|continue|lambda|with|as|pass|extends|super|is|var|Integer|List|Map|Set|int\[\])\b/g,'<span class="kw">$1</span>')
-    .replace(/\b(\d+\.?\d*)\b/g,'<span class="num">$1</span>');
+  var s = String(src).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  var toks = [], ti = 0;
+  function tok(h){ var id='\x00T'+(ti++)+'\x00'; toks.push([id,h]); return id; }
+  s = s.replace(/(\/\/[^\n]*|\/\/[^\n]*$)/g, function(m){ return tok('<span class="comment">'+m+'</span>'); });
+  s = s.replace(/(#.*)/g, function(m){ return tok('<span class="comment">'+m+'</span>'); });
+  s = s.replace(/(".*?"|'.*?')/g, function(m){ return tok('<span class="str">'+m+'</span>'); });
+  s = s.replace(/\b(class|def|return|if|elif|else|for|in|while|import|from|try|except|finally|new|static|void|int|double|float|char|boolean|String|long|public|private|self|None|True|False|break|continue|lambda|with|as|pass|extends|super|is|var|Integer|List|Map|Set|int\[\])\b/g, function(m){ return tok('<span class="kw">'+m+'</span>'); });
+  s = s.replace(/\b(\d+\.?\d*)\b/g, function(m){ return tok('<span class="num">'+m+'</span>'); });
+  toks.forEach(function(t){ s = s.split(t[0]).join(t[1]); });
+  return s;
 }
 
 function buildDrawer(){

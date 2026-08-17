@@ -935,6 +935,138 @@ def is_pal(s):
 extra:"<b>Flow (dono languages mein same):</b> 1) do pointers l=0, r=len-1 2) jab tak l &lt; r, dono end ke chars compare karo 3) mismatch mila → false 4) warna pointers ko andar le jaao. Python one-liner <code>s == s[::-1]</code> shortcut hai — lekin interviewer pooche toh two-pointer version bhi batao."
 },
 
+{type:"lc", cat:"Strings", title:"Q38 · Reverse Words in a String", diff:"M", note:"String ke saare words reverse karo — extra spaces hat jayein.",
+java:`static String reverseWords(String s) {
+    String[] words = s.trim().split("\\\\s+");
+    StringBuilder sb = new StringBuilder();
+    for (int i = words.length - 1; i >= 0; i--) {
+        sb.append(words[i]);
+        if (i > 0) sb.append(" ");
+    }
+    return sb.toString();
+}`,
+python:`def reverse_words(s):
+    return " ".join(s.split()[::-1])`,
+extra:`<b>Approach:</b> <code>split()</code> se words alag, phir reverse. O(n) time, O(n) space. Python one-liner: <code>" ".join(s.split()[::-1])</code>. Edge cases: leading/trailing spaces, multiple spaces between words.`},
+
+{type:"lc", cat:"Strings", title:"Q39 · Valid Parentheses", diff:"E", note:"Brackets sahi se matched hain ya nahi — stack se solve hota hai.",
+java:`static boolean isValid(String s) {
+    java.util.Stack<Character> st = new java.util.Stack<>();
+    for (char c : s.toCharArray()) {
+        if (c == '(') st.push(')');
+        else if (c == '{') st.push('}');
+        else if (c == '[') st.push(']');
+        else if (st.isEmpty() || st.pop() != c) return false;
+    }
+    return st.isEmpty();
+}`,
+python:`def is_valid(s):
+    stack = []
+    mp = {')':'(', '}':'{', ']':'['}
+    for c in s:
+        if c in mp:
+            if not stack or stack[-1] != mp[c]:
+                return False
+            stack.pop()
+        else:
+            stack.append(c)
+    return len(stack) == 0`,
+extra:`<b>Stack pattern:</b> Opening bracket aaye → push. Closing bracket aaye → stack top match karo. End mein stack empty → valid. O(n) time, O(n) space. Ye pattern interview mein bahut aata hai — Min Stack, Generate Parentheses sab isi pe based hain.`},
+
+{type:"lc", cat:"Strings", title:"Q40 · Longest Palindromic Substring", diff:"M", note:"Sabse lamba palindrome substring (not subsequence) dhundho.",
+java:`static String longestPalindrome(String s) {
+    int start = 0, maxLen = 1;
+    for (int i = 0; i < s.length(); i++) {
+        expand(s, i, i, start, maxLen);     // odd
+        expand(s, i, i+1, start, maxLen);   // even
+    }
+    return s.substring(start, start + maxLen);
+}
+static void expand(String s, int l, int r,
+        int[] start, int[] maxLen) {
+    while (l >= 0 && r < s.length()
+            && s.charAt(l) == s.charAt(r)) {
+        if (r - l + 1 > maxLen[0]) {
+            start[0] = l;
+            maxLen[0] = r - l + 1;
+        }
+        l--; r++;
+    }
+}`,
+python:`def longest_palindrome(s):
+    start, max_len = 0, 1
+    def expand(l, r):
+        nonlocal start, max_len
+        while l >= 0 and r < len(s) and s[l] == s[r]:
+            if r - l + 1 > max_len:
+                start, max_len = l, r - l + 1
+            l -= 1; r += 1
+    for i in range(len(s)):
+        expand(i, i)      # odd length
+        expand(i, i+1)    # even length
+    return s[start:start+max_len]`,
+extra:`<b>Expand from center:</b> Har index ko center maan ke odd/even dono expand karo. O(n²) time, O(1) space. DP bhi ho sakta hai lekin ye approach simpler hai. Longest Palindromic Subsequence DP hai — ye substring hai.`},
+
+{type:"lc", cat:"Strings", title:"Q41 · Group Anagrams", diff:"M", note:"Anagrams ko group mein daalo — sorted string as key use karo.",
+java:`static List<List<String>> groupAnagrams(String[] strs) {
+    Map<String, List<String>> map = new HashMap<>();
+    for (String s : strs) {
+        char[] ch = s.toCharArray();
+        java.util.Arrays.sort(ch);
+        String key = new String(ch);
+        map.computeIfAbsent(key,
+            k -> new ArrayList<>()).add(s);
+    }
+    return new ArrayList<>(map.values());
+}`,
+python:`from collections import defaultdict
+def group_anagrams(strs):
+    mp = defaultdict(list)
+    for s in strs:
+        mp["".join(sorted(s))].append(s)
+    return list(mp.values())`,
+extra:`<b>Key insight:</b> Sorted version of anagrams same hota hai — "eat" → "aet", "tea" → "aet". HashMap mein sorted string key, original strings list mein. O(n * k log k) jahan k = max string length.`},
+
+{type:"lc", cat:"Strings", title:"Q42 · Minimum Window Substring", diff:"H", note:"s mein se sabse chhoti substring jo t ke saare characters contain kare.",
+java:`static String minWindow(String s, String t) {
+    int[] freq = new int[128];
+    for (char c : t.toCharArray()) freq[c]++;
+    int left = 0, minStart = 0, minLen = Integer.MAX_VALUE;
+    int count = t.length();
+    for (int right = 0; right < s.length(); right++) {
+        if (freq[s.charAt(right)]-- > 0) count--;
+        while (count == 0) {
+            if (right - left + 1 < minLen) {
+                minStart = left;
+                minLen = right - left + 1;
+            }
+            if (++freq[s.charAt(left++)] > 0) count++;
+        }
+    }
+    return minLen == Integer.MAX_VALUE ?
+        "" : s.substring(minStart, minStart + minLen);
+}`,
+python:`def min_window(s, t):
+    from collections import Counter
+    need = Counter(t)
+    missing = len(t)
+    left = start = 0
+    min_len = float('inf')
+    for right, ch in enumerate(s):
+        if need[ch] > 0:
+            missing -= 1
+        need[ch] -= 1
+        while missing == 0:
+            if right - left + 1 < min_len:
+                min_len = right - left + 1
+                start = left
+            need[s[left]] += 1
+            if need[s[left]] > 0:
+                missing += 1
+            left += 1
+    return "" if min_len == float('inf') else s[start:start+min_len]`,
+extra:`<b>Sliding Window + HashMap:</b> Right pointer expand karo jab tak t ke saare characters cover ho jayein. Phir left pointer shrink karo jab tak valid hai. O(n) time. Ye Hard level question hai — sliding window ka king. Interview mein directly poochte hain.`},
+
 {cat:"Strings", title:"Sawaal 3 — Strings ke Questions", note:"Slicing, methods aur string tricks test karo.",
 type:"quiz",
 questions:[
@@ -1772,6 +1904,60 @@ while cur:
     cur = cur.next`,
 extra:"<b>Interview flow:</b> Python mein linked list ke saare patterns isi Node class se karo — reverse (3 pointers), mid (slow-fast), cycle detect (Floyd's). Java ke built-in LinkedList se problem-solving nahi hoti, DSA mein Node class hi use karte hain."
 },
+
+{type:"lc", cat:"Collections", title:"Q61 · LRU Cache", diff:"M", note:"HashMap + Doubly Linked List se O(1) get/put — ye question interview mein sabse zyada poochte hain.",
+java:`class LRUCache {
+    int cap;
+    Map<Integer, Node> map = new HashMap<>();
+    Node head = new Node(0,0), tail = new Node(0,0);
+    class Node { int k,v; Node prev,next;
+        Node(int k,int v){this.k=k;this.v=v;} }
+    public LRUCache(int capacity) {
+        cap = capacity;
+        head.next = tail; tail.prev = head;
+    }
+    void remove(Node n) {
+        n.prev.next = n.next;
+        n.next.prev = n.prev;
+    }
+    void addFirst(Node n) {
+        n.next = head.next; n.prev = head;
+        head.next.prev = n; head.next = n;
+    }
+    public int get(int key) {
+        if (!map.containsKey(key)) return -1;
+        Node n = map.get(key);
+        remove(n); addFirst(n);
+        return n.v;
+    }
+    public void put(int key, int val) {
+        if (map.containsKey(key))
+            remove(map.get(key));
+        Node n = new Node(key, val);
+        addFirst(n); map.put(key, n);
+        if (map.size() > cap) {
+            Node lru = tail.prev;
+            remove(lru); map.remove(lru.k);
+        }
+    }
+}`,
+python:`from collections import OrderedDict
+class LRUCache:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.cache = OrderedDict()
+    def get(self, key):
+        if key not in self.cache:
+            return -1
+        self.cache.move_to_end(key)
+        return self.cache[key]
+    def put(self, key, value):
+        if key in self.cache:
+            self.cache.move_to_end(key)
+        self.cache[key] = value
+        if len(self.cache) > self.cap:
+            self.cache.popitem(last=False)`,
+extra:`<b>Interview king:</b> Java: HashMap + Doubly Linked List manually. Python: <code>OrderedDict</code> shortcut. Get: key exist → move_to_end (most recent). Put: overflow → popitem(last=False) = LRU. O(1) get & put. LFU Cache bhi same pattern + frequency counter.`},
 
 {cat:"Collections", title:"Sawaal 5 — Collections ke Questions", note:"HashMap, Stack, Queue, Heap test karo.",
 type:"quiz",
@@ -2933,6 +3119,88 @@ def inorder(n):
 extra:"<b>BST ka khel:</b> insertion updated root return karta hai (reference issue bachta). Search binary search jaisa hi hai. Kth smallest = inorder ka kth element. Worst case (skewed) O(n) — isliye balanced trees (AVL/Red-Black) aate hain."
 },
 
+{type:"lc", cat:"Trees", title:"Q43 · Invert Binary Tree", diff:"E", note:"Har node ke left aur right subtree ko swap karo.",
+java:`static TreeNode invertTree(TreeNode root) {
+    if (root == null) return null;
+    TreeNode temp = root.left;
+    root.left = invertTree(root.right);
+    root.right = invertTree(temp);
+    return root;
+}`,
+python:`def invert_tree(root):
+    if not root:
+        return None
+    root.left, root.right = invert_tree(root.right), invert_tree(root.left)
+    return root`,
+extra:`<b>Recursion:</b> Base case: null. Har node pe left aur right ko swap karo, phir recursively dono subtrees ko invert karo. O(n) time. Ye "Google interview question" famous hai — simple recursion.`},
+
+{type:"lc", cat:"Trees", title:"Q44 · Maximum Depth of Binary Tree", diff:"E", note:"Tree ki sabse lambi root-to-leaf path ka length.",
+java:`static int maxDepth(TreeNode root) {
+    if (root == null) return 0;
+    return 1 + Math.max(
+        maxDepth(root.left),
+        maxDepth(root.right));
+}`,
+python:`def max_depth(root):
+    if not root:
+        return 0
+    return 1 + max(max_depth(root.left), max_depth(root.right))`,
+extra:`<b>Post-order DFS:</b> null pe 0, warna 1 + max(left, right). O(n) time, O(h) space. BFS bhi ho sakta hai (level count).`},
+
+{type:"lc", cat:"Trees", title:"Q45 · Level Order Traversal (BFS)", diff:"M", note:"Tree ke nodes ko level by level print karo — har level alag list mein.",
+java:`static List<List<Integer>> levelOrder(TreeNode root) {
+    List<List<Integer>> result = new ArrayList<>();
+    if (root == null) return result;
+    Queue<TreeNode> q = new LinkedList<>();
+    q.offer(root);
+    while (!q.isEmpty()) {
+        int size = q.size();
+        List<Integer> level = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            TreeNode node = q.poll();
+            level.add(node.val);
+            if (node.left != null) q.offer(node.left);
+            if (node.right != null) q.offer(node.right);
+        }
+        result.add(level);
+    }
+    return result;
+}`,
+python:`from collections import deque
+def level_order(root):
+    if not root: return []
+    result, q = [], deque([root])
+    while q:
+        level = []
+        for _ in range(len(q)):
+            node = q.popleft()
+            level.append(node.val)
+            if node.left: q.append(node.left)
+            if node.right: q.append(node.right)
+        result.append(level)
+    return result`,
+extra:`<b>BFS pattern:</b> Queue mein root daalo, har level ke liye size note karo, utne nodes process karo, unke children queue mein. O(n) time. Ye pattern Zigzag, Right Side View, Bottom View sab mein use hota hai.`},
+
+{type:"lc", cat:"Trees", title:"Q46 · Lowest Common Ancestor (LCA)", diff:"M", note:"Do nodes ka sabse neeche ka common ancestor dhundho.",
+java:`static TreeNode lowestCommonAncestor(TreeNode root,
+        TreeNode p, TreeNode q) {
+    if (root == null || root == p || root == q)
+        return root;
+    TreeNode left = lowestCommonAncestor(root.left, p, q);
+    TreeNode right = lowestCommonAncestor(root.right, p, q);
+    if (left != null && right != null) return root;
+    return left != null ? left : right;
+}`,
+python:`def lca(root, p, q):
+    if not root or root == p or root == q:
+        return root
+    left = lca(root.left, p, q)
+    right = lca(root.right, p, q)
+    if left and right:
+        return root
+    return left or right`,
+extra:`<b>Key insight:</b> Agar dono nodes left subtree mein hain → left. Agar dono right mein → right. Agar ek left, ek right → current root LCA hai. O(n) time. BST mein simpler approach bhi hai (values compare karke).`},
+
 {cat:"Trees", title:"Sawaal 10 — Trees ke Questions", note:"Node, traversals, BFS, BST test karo.",
 type:"quiz",
 questions:[
@@ -3138,6 +3406,167 @@ def dijkstra(src, n, adj):
 extra:"<b>Core idea:</b> min-heap se smallest-distance node nikalo, uske neighbours relax karo. <code>if d > dist[u]: continue</code> purani entries skip karne ke liye. Java: PriorityQueue, Python: <code>heapq</code>. O(E log V)."
 },
 
+{type:"lc", cat:"Graphs", title:"Q47 · Number of Islands", diff:"M", note:"2D grid mein kitne '1' (land) ke islands hain — DFS/BFS se.",
+java:`static int numIslands(char[][] grid) {
+    int count = 0;
+    for (int i = 0; i < grid.length; i++)
+        for (int j = 0; j < grid[0].length; j++)
+            if (grid[i][j] == '1') {
+                count++;
+                dfs(grid, i, j);
+            }
+    return count;
+}
+static void dfs(char[][] g, int i, int j) {
+    if (i < 0 || j < 0 || i >= g.length
+        || j >= g[0].length || g[i][j] == '0') return;
+    g[i][j] = '0';
+    dfs(g, i+1, j); dfs(g, i-1, j);
+    dfs(g, i, j+1); dfs(g, i, j-1);
+}`,
+python:`def num_islands(grid):
+    def dfs(i, j):
+        if i < 0 or j < 0 or i >= len(grid) or j >= len(grid[0]) or grid[i][j] == '0':
+            return
+        grid[i][j] = '0'
+        dfs(i+1, j); dfs(i-1, j)
+        dfs(i, j+1); dfs(i, j-1)
+    count = 0
+    for i in range(len(grid)):
+        for j in range(len(grid[0])):
+            if grid[i][j] == '1':
+                count += 1
+                dfs(i, j)
+    return count`,
+extra:`<b>Classic DFS flood fill:</b> '1' mila → island count++, uske saare connected '1' ko '0' bana do (visited). Har cell O(1), total O(m*n). Union-Find bhi ho sakta hai.`},
+
+{type:"lc", cat:"Graphs", title:"Q48 · Clone Graph", diff:"M", note:"Graph ka deep copy banao — har node ka exact copy with neighbours.",
+java:`static Node cloneGraph(Node node) {
+    if (node == null) return null;
+    Map<Node, Node> map = new HashMap<>();
+    map.put(node, new Node(node.val));
+    Queue<Node> q = new LinkedList<>();
+    q.offer(node);
+    while (!q.isEmpty()) {
+        Node cur = q.poll();
+        for (Node nb : cur.neighbors) {
+            if (!map.containsKey(nb)) {
+                map.put(nb, new Node(nb.val));
+                q.offer(nb);
+            }
+            map.get(cur).neighbors.add(map.get(nb));
+        }
+    }
+    return map.get(node);
+}`,
+python:`def clone_graph(node):
+    if not node: return None
+    mp = {node: Node(node.val)}
+    q = deque([node])
+    while q:
+        cur = q.popleft()
+        for nb in cur.neighbors:
+            if nb not in mp:
+                mp[nb] = Node(nb.val)
+                q.append(nb)
+            mp[cur].neighbors.append(mp[nb])
+    return mp[node]`,
+extra:`<b>BFS + HashMap:</b> Original node → cloned node mapping. Har visited node ek baar process. Neighbours mein cloned versions add karo. O(V+E) time.`},
+
+{type:"lc", cat:"Graphs", title:"Q49 · Course Schedule (Topological Sort)", diff:"M", note:"Kya saare courses complete ho sakte hain — cycle detection ya topological sort se.",
+java:`static boolean canFinish(int num, int[][] pre) {
+    List<List<Integer>> adj = new ArrayList<>();
+    int[] inDeg = new int[num];
+    for (int i = 0; i < num; i++) adj.add(new ArrayList<>());
+    for (int[] p : pre) {
+        adj.get(p[1]).add(p[0]);
+        inDeg[p[0]]++;
+    }
+    Queue<Integer> q = new LinkedList<>();
+    for (int i = 0; i < num; i++)
+        if (inDeg[i] == 0) q.offer(i);
+    int count = 0;
+    while (!q.isEmpty()) {
+        int cur = q.poll(); count++;
+        for (int nb : adj.get(cur))
+            if (--inDeg[nb] == 0) q.offer(nb);
+    }
+    return count == num;
+}`,
+python:`from collections import deque
+def can_finish(num, pre):
+    adj = [[] for _ in range(num)]
+    in_deg = [0] * num
+    for a, b in pre:
+        adj[b].append(a)
+        in_deg[a] += 1
+    q = deque(i for i in range(num) if in_deg[i] == 0)
+    count = 0
+    while q:
+        cur = q.popleft()
+        count += 1
+        for nb in adj[cur]:
+            in_deg[nb] -= 1
+            if inDeg[nb] == 0:
+                q.append(nb)
+    return count == num`,
+extra:`<b>Kahn's Algorithm (BFS Topological Sort):</b> In-degree 0 wale nodes se start karo, process karte jaao. Agar saare nodes process ho gaye → no cycle → possible. Cycle hai → impossible. O(V+E).`},
+
+{type:"lc", cat:"Graphs", title:"Q50 · Rotting Oranges", diff:"M", note:"Fresh oranges ko kitne minutes mein rot karna hoga — multi-source BFS.",
+java:`static int orangesRotting(int[][] grid) {
+    Queue<int[]> q = new LinkedList<>();
+    int fresh = 0, m = grid.length, n = grid[0].length;
+    for (int i = 0; i < m; i++)
+        for (int j = 0; j < n; j++) {
+            if (grid[i][j] == 2) q.offer(new int[]{i,j});
+            if (grid[i][j] == 1) fresh++;
+        }
+    if (fresh == 0) return 0;
+    int[][] dirs = {{1,0},{-1,0},{0,1},{0,-1}};
+    int minutes = 0;
+    while (!q.isEmpty()) {
+        int size = q.size();
+        boolean rotted = false;
+        for (int i = 0; i < size; i++) {
+            int[] cur = q.poll();
+            for (int[] d : dirs) {
+                int x = cur[0]+d[0], y = cur[1]+d[1];
+                if (x>=0 && y>=0 && x<m && y<n && grid[x][y]==1) {
+                    grid[x][y] = 2; fresh--; rotted = true;
+                    q.offer(new int[]{x,y});
+                }
+            }
+        }
+        if (rotted) minutes++;
+    }
+    return fresh == 0 ? minutes : -1;
+}`,
+python:`from collections import deque
+def oranges_rotting(grid):
+    q = deque()
+    fresh = 0
+    for i in range(len(grid)):
+        for j in range(len(grid[0])):
+            if grid[i][j] == 2: q.append((i, j))
+            if grid[i][j] == 1: fresh += 1
+    if fresh == 0: return 0
+    minutes = 0
+    dirs = [(1,0),(-1,0),(0,1),(0,-1)]
+    while q:
+        rotted = False
+        for _ in range(len(q)):
+            x, y = q.popleft()
+            for dx, dy in dirs:
+                nx, ny = x+dx, y+dy
+                if 0 <= nx < len(grid) and 0 <= ny < len(grid[0]) and grid[nx][ny] == 1:
+                    grid[nx][ny] = 2
+                    fresh -= 1
+                    rotted = True
+                    q.append((nx, ny))
+        if rotted: minutes += 1
+    return minutes if fresh == 0 else -1`,
+extra:`<b>Multi-source BFS:</b> Saare rotten oranges ek saath queue mein daalo. Har minute ek level expand karo. Fresh oranges khatam → minutes answer. Agar koi fresh bacha → impossible (-1). O(m*n). Ye BFS ka best example hai — "spreading" simulation.`},
+
 {cat:"Graphs", title:"Sawaal 11 — Graphs ke Questions", note:"Representation, BFS, DFS, topological sort, Dijkstra test karo.",
 type:"quiz",
 questions:[
@@ -3306,6 +3735,60 @@ rows:[
 ["<code>Python sort()</code>","O(n log n)","O(n log n)","O(n log n)","O(n)","Yes (TimSort)"]
 ]},
 
+{type:"lc", cat:"Sorting", title:"Q58 · Merge Intervals", diff:"M", note:"Saare overlapping intervals ko merge karo — sort + linear scan.",
+java:`static int[][] merge(int[][] intervals) {
+    java.util.Arrays.sort(intervals, (a,b) -> a[0]-b[0]);
+    List<int[]> merged = new ArrayList<>();
+    for (int[] cur : intervals) {
+        if (merged.isEmpty() || merged.get(merged.size()-1)[1] < cur[0]) {
+            merged.add(cur);
+        } else {
+            merged.get(merged.size()-1)[1] =
+                Math.max(merged.get(merged.size()-1)[1], cur[1]);
+        }
+    }
+    return merged.toArray(new int[0][]);
+}`,
+python:`def merge(intervals):
+    intervals.sort(key=lambda x: x[0])
+    merged = []
+    for cur in intervals:
+        if not merged or merged[-1][1] < cur[0]:
+            merged.append(cur)
+        else:
+            merged[-1][1] = max(merged[-1][1], cur[1])
+    return merged`,
+extra:`<b>Pattern:</b> Start time sort, phir linear scan. Agar current start ≤ previous end → overlap → merge (max end). Nahi toh naya interval. O(n log n) sort + O(n) scan.`},
+
+{type:"lc", cat:"Sorting", title:"Q59 · Kth Largest Element", diff:"M", note:"Array mein kth largest element dhundho — Quickselect ya heap.",
+java:`// Quickselect — avg O(n)
+static int quickSelect(int[] nums, int k) {
+    int target = nums.length - k;
+    return quickSelect(nums, 0, nums.length-1, target);
+}
+static int quickSelect(int[] a, int l, int r, int k) {
+    int pivot = a[r], p = l;
+    for (int i = l; i < r; i++)
+        if (a[i] <= pivot) { int t=a[i]; a[i]=a[p]; a[p]=t; p++; }
+    int t=a[p]; a[p]=a[r]; a[r]=t;
+    if (p == k) return a[p];
+    return p < k ? quickSelect(a, p+1, r, k)
+                 : quickSelect(a, l, p-1, k);
+}`,
+python:`def quick_select(nums, k):
+    target = len(nums) - k
+    def qs(l, r):
+        pivot, p = nums[r], l
+        for i in range(l, r):
+            if nums[i] <= pivot:
+                nums[i], nums[p] = nums[p], nums[i]
+                p += 1
+        nums[p], nums[r] = nums[r], nums[p]
+        if p == target: return nums[p]
+        return qs(p+1, r) if p < target else qs(l, p-1)
+    return qs(0, len(nums)-1)`,
+extra:`<b>Quickselect = QuickSort ka ek side:</b> Pivot fix karo, sirf us side jao jahan kth element hai. Avg O(n), worst O(n²). Min-heap approach bhi O(n log k). Interview mein dono approaches bolo.`},
+
 {cat:"Sorting", title:"Sawaal 12 — Sorting ke Questions", note:"Sorting algorithms ki complexity aur stability test karo.",
 type:"quiz",
 questions:[
@@ -3460,6 +3943,104 @@ def knapsack(w, v, W):
 extra:"<b>1D optimization:</b> 2D table ko ek row rakhkar optimize — par capacity loop <b>reverse</b> chahiye taaki har item ek baar use ho (0/1). Reverse na karo toh unbounded ho jaata (coin change wala). Ye 'use once vs unlimited' ka classic interview point hai."
 },
 
+{type:"lc", cat:"DP", title:"Q51 · Climbing Stairs", diff:"E", note:"N steps hain — har baad 1 ya 2 steps chadh sakte ho — kitne tarike hain?",
+java:`static int climbStairs(int n) {
+    if (n <= 2) return n;
+    int a = 1, b = 2;
+    for (int i = 3; i <= n; i++) {
+        int c = a + b;
+        a = b; b = c;
+    }
+    return b;
+}`,
+python:`def climb_stairs(n):
+    if n <= 2: return n
+    a, b = 1, 2
+    for i in range(3, n+1):
+        a, b = b, a + b
+    return b`,
+extra:`<b>Ye Fibonacci hai:</b> f(n) = f(n-1) + f(n-2). Base: f(1)=1, f(2)=2. DP nahi chahiye — O(1) space with two variables. Interview mein seedha bolo: "Ye Fibonacci pattern hai."`},
+
+{type:"lc", cat:"DP", title:"Q52 · Longest Increasing Subsequence (LIS)", diff:"M", note:"Array mein sabse lamba strictly increasing subsequence ka length.",
+java:`static int lengthOfLIS(int[] nums) {
+    List<Integer> tails = new ArrayList<>();
+    for (int x : nums) {
+        int pos = java.util.Collections.binarySearch(tails, x);
+        if (pos < 0) pos = -(pos + 1);
+        if (pos == tails.size()) tails.add(x);
+        else tails.set(pos, x);
+    }
+    return tails.size();
+}`,
+python:`import bisect
+def length_of_lis(nums):
+    tails = []
+    for x in nums:
+        pos = bisect.bisect_left(tails, x)
+        if pos == len(tails):
+            tails.append(x)
+        else:
+            tails[pos] = x
+    return len(tails)`,
+extra:`<b>O(n log n) approach:</b> tails[] array mein har length ke liye minimum ending element rakhte hain. Binary search se correct position dhundho. Interview mein pehle O(n²) DP bolo, phir optimize ye approach. O(n log n) time, O(n) space.`},
+
+{type:"lc", cat:"DP", title:"Q53 · Edit Distance", diff:"H", note:"Ek string ko dusre mein convert karne ke liye minimum operations (insert/delete/replace).",
+java:`static int minDistance(String word1, String word2) {
+    int m = word1.length(), n = word2.length();
+    int[][] dp = new int[m+1][n+1];
+    for (int i = 0; i <= m; i++) dp[i][0] = i;
+    for (int j = 0; j <= n; j++) dp[0][j] = j;
+    for (int i = 1; i <= m; i++)
+        for (int j = 1; j <= n; j++) {
+            if (word1.charAt(i-1) == word2.charAt(j-1))
+                dp[i][j] = dp[i-1][j-1];
+            else
+                dp[i][j] = 1 + Math.min(dp[i-1][j-1],
+                    Math.min(dp[i-1][j], dp[i][j-1]));
+        }
+    return dp[m][n];
+}`,
+python:`def min_distance(w1, w2):
+    m, n = len(w1), len(w2)
+    dp = [[0]*(n+1) for _ in range(m+1)]
+    for i in range(m+1): dp[i][0] = i
+    for j in range(n+1): dp[0][j] = j
+    for i in range(1, m+1):
+        for j in range(1, n+1):
+            if w1[i-1] == w2[j-1]:
+                dp[i][j] = dp[i-1][j-1]
+            else:
+                dp[i][j] = 1 + min(dp[i-1][j-1],
+                    dp[i-1][j], dp[i][j-1])
+    return dp[m][n]`,
+extra:`<b>2D DP classic:</b> dp[i][j] = w1 ke pehle i chars ko w2 ke pehle j chars mein convert karne ke minimum operations. Match → copy diagonal. No match → 1 + min(replace, delete, insert). O(m*n) time and space. Space optimize bhi ho sakta hai 1D mein.`},
+
+{type:"lc", cat:"DP", title:"Q54 · Longest Common Substring", diff:"M", note:"Do strings mein sabse lamba common substring (contiguous) ka length.",
+java:`static int longestCommonSubstring(String s1, String s2) {
+    int m = s1.length(), n = s2.length();
+    int[][] dp = new int[m+1][n+1];
+    int maxLen = 0;
+    for (int i = 1; i <= m; i++)
+        for (int j = 1; j <= n; j++) {
+            if (s1.charAt(i-1) == s2.charAt(j-1)) {
+                dp[i][j] = dp[i-1][j-1] + 1;
+                maxLen = Math.max(maxLen, dp[i][j]);
+            }
+        }
+    return maxLen;
+}`,
+python:`def longest_common_substring(s1, s2):
+    m, n = len(s1), len(s2)
+    dp = [[0]*(n+1) for _ in range(m+1)]
+    max_len = 0
+    for i in range(1, m+1):
+        for j in range(1, n+1):
+            if s1[i-1] == s2[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+                max_len = max(max_len, dp[i][j])
+    return max_len`,
+extra:`<b>Substring vs Subsequence:</b> Substring = contiguous, Subsequence = not necessarily contiguous. Ye <b>substring</b> hai — match ho toh dp[i-1][j-1]+1, nahi toh 0 reset. LCS mein reset nahi hota. O(m*n). Interview mein dono confuse karte hain — dhyan se padho.`},
+
 {cat:"DP", title:"Sawaal 13 — DP ke Questions", note:"Top-down, bottom-up, 1D, 2D DP test karo.",
 type:"quiz",
 questions:[
@@ -3571,6 +4152,72 @@ def fractional(items, W):
     return total`,
 extra:"<b>Sort by ratio</b> (value/weight) descending, phir bharo. Item toot sakta isliye greedy theek. <b>Compare with 0/1 knapsack:</b> wahan items nahi toote sakte — greedy fail, DP chahiye. Ye contrast interview ka golden question hai."
 },
+
+{type:"lc", cat:"Greedy", title:"Q55 · Jump Game", diff:"M", note:"Array ke end tak pahunch sakte ho ya nahi — har step pe max reach update karo.",
+java:`static boolean canJump(int[] nums) {
+    int maxReach = 0;
+    for (int i = 0; i < nums.length; i++) {
+        if (i > maxReach) return false;
+        maxReach = Math.max(maxReach, i + nums[i]);
+    }
+    return true;
+}`,
+python:`def can_jump(nums):
+    max_reach = 0
+    for i, jump in enumerate(nums):
+        if i > max_reach:
+            return False
+        max_reach = max(max_reach, i + jump)
+    return True`,
+extra:`<b>Greedy:</b> Max reach track karo. Agar current index > maxReach → stuck → false. End tak pahunch gaye → true. O(n) time, O(1) space. Jump Game II (minimum jumps) bhi same pattern + counter.`},
+
+{type:"lc", cat:"Greedy", title:"Q56 · Jump Game II — Minimum Jumps", diff:"M", note:"End tak minimum kitne jumps chahiye.",
+java:`static int jump(int[] nums) {
+    int jumps = 0, curEnd = 0, farthest = 0;
+    for (int i = 0; i < nums.length - 1; i++) {
+        farthest = Math.max(farthest, i + nums[i]);
+        if (i == curEnd) {
+            jumps++;
+            curEnd = farthest;
+        }
+    }
+    return jumps;
+}`,
+python:`def jump(nums):
+    jumps = cur_end = farthest = 0
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == cur_end:
+            jumps += 1
+            cur_end = farthest
+    return jumps`,
+extra:`<b>BFS-like greedy:</b> Har level (jump) ke liye current range process karo, usi mein farthest update karo. Range khatam → naya jump, farthest = naya range. O(n) time. Greedy level-by-level BFS jaisa hai.`},
+
+{type:"lc", cat:"Greedy", title:"Q57 · Non-overlapping Intervals", diff:"M", note:"Minimum intervals hatao taaki baaki sab non-overlapping rahein.",
+java:`static int eraseOverlapIntervals(int[][] intervals) {
+    java.util.Arrays.sort(intervals,
+        (a, b) -> a[1] - b[1]);
+    int count = 0, prevEnd = intervals[0][1];
+    for (int i = 1; i < intervals.length; i++) {
+        if (intervals[i][0] < prevEnd) {
+            count++;  // overlap — hatao
+        } else {
+            prevEnd = intervals[i][1];
+        }
+    }
+    return count;
+}`,
+python:`def erase_overlap(intervals):
+    intervals.sort(key=lambda x: x[1])
+    count = 0
+    prev_end = intervals[0][1]
+    for i in range(1, len(intervals)):
+        if intervals[i][0] < prev_end:
+            count += 1
+        else:
+            prev_end = intervals[i][1]
+    return count`,
+extra:`<b>End time sort = greedy key:</b> End time sort, phir earliest ending wali ko rakho. Agar overlap hai → count++. Ye Activity Selection ka reverse hai — wahan max activities count, yahan min removals. O(n log n).`},
 
 {cat:"Greedy", title:"Sawaal 14 — Greedy ke Questions", note:"Greedy soch, activity selection, jump game test karo.",
 type:"quiz",
@@ -3718,6 +4365,68 @@ def prefix_count(self, p):
     return cur.count`,
 extra:"<b>Count trick:</b> insert ke path ke har node pe count++ — prefixCount O(L) mein. DFS se prefix node se aage chalo = autocomplete suggestions. Word Search II (board) mein trie + grid DFS — hard problem isi pe banti."
 },
+
+{type:"lc", cat:"Trie", title:"Q60 · Implement Trie (Prefix Tree)", diff:"M", note:"Trie khud banao — insert, search, startsWith teeno implement karo.",
+java:`class TrieNode {
+    TrieNode[] children = new TrieNode[26];
+    boolean isEnd = false;
+}
+class Trie {
+    TrieNode root = new TrieNode();
+    public void insert(String word) {
+        TrieNode node = root;
+        for (char c : word.toCharArray()) {
+            int i = c - 'a';
+            if (node.children[i] == null)
+                node.children[i] = new TrieNode();
+            node = node.children[i];
+        }
+        node.isEnd = true;
+    }
+    public boolean search(String word) {
+        TrieNode node = find(word);
+        return node != null && node.isEnd;
+    }
+    public boolean startsWith(String prefix) {
+        return find(prefix) != null;
+    }
+    TrieNode find(String s) {
+        TrieNode node = root;
+        for (char c : s.toCharArray()) {
+            int i = c - 'a';
+            if (node.children[i] == null) return null;
+            node = node.children[i];
+        }
+        return node;
+    }
+}`,
+python:`class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end = False
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+    def insert(self, word):
+        node = self.root
+        for c in word:
+            if c not in node.children:
+                node.children[c] = TrieNode()
+            node = node.children[c]
+        node.is_end = True
+    def search(self, word):
+        node = self._find(word)
+        return node is not None and node.is_end
+    def starts_with(self, prefix):
+        return self._find(prefix) is not None
+    def _find(self, s):
+        node = self.root
+        for c in s:
+            if c not in node.children:
+                return None
+            node = node.children[c]
+        return node`,
+extra:`<b>Trie template — interview mein seedha code:</b> Node mein children[26] (ya dict) + isEnd flag. Insert: har char pe jaao, agar nahi hai toh banao, last pe isEnd=true. Search: jaao, agar null ya isEnd=false → false. startsWith: sirf path hona chahiye. O(L) per operation.`},
 
 {cat:"Trie", title:"Sawaal 15 — Trie ke Questions", note:"Trie concept, search, prefix count test karo.",
 type:"quiz",
@@ -5047,6 +5756,255 @@ answer:`<b>*args</b> = saare extra positional arguments ek tuple mein collect ka
 Java equivalent = <b>varargs</b> <code>int... nums</code> (positional only). Keyword arguments ka equivalent nahi.
 <br><br>Java ke <code>min(int... a)</code> vs Python <code>min(*a)</code> — same concept, Python mein kwargs ka extra power.`},
 
+/* ========== CHAPTER — PYTHON EXCEPTIONS & FILE HANDLING ========== */
+{cat:"Python Extras", title:"Exception Handling — Python Detail", note:"Python mein exception handling same concept hai Java se, lekin syntax alag hai. <code>except</code> blocks multiple ho sakte hain, <code>raise</code> se khud exception throw karte hain, aur <code>finally</code> hamesha chalega.",
+type:"code",
+java:`// Java: try-catch-finally + checked exceptions
+try {
+    int x = Integer.parseInt("abc");
+} catch (NumberFormatException e) {
+    System.out.println("Invalid number");
+} catch (Exception e) {
+    System.out.println("General error");
+} finally {
+    System.out.println("Always runs");
+}
+
+// custom exception
+class MyException extends Exception {
+    MyException(String msg) { super(msg); }
+}
+throw new MyException("error");`,
+python:`# Python: try-except-else-finally (no checked exceptions)
+try:
+    x = int("abc")
+except ValueError as e:
+    print(f"Invalid: {e}")
+except Exception as e:
+    print(f"General: {e}")
+else:
+    print("No error!")       # runs only if NO exception
+finally:
+    print("Always runs")
+
+# raise = throw
+raise ValueError("kuch galat hai")
+
+# custom exception
+class MyError(Exception):
+    pass
+raise MyError("custom error")`,
+extra:"<b>Key differences:</b> (1) Python mein <b>checked exceptions nahi hain</b> — koi bhi exception kabhi bhi aa sakta hai. (2) <code>else</code> block sirf tab chalta hai jab koi exception na aaye — useful for 'success' code. (3) <code>except Exception as e</code> mein <code>as e</code> se error message milta hai. (4) <code>raise</code> = Java ka <code>throw</code>."
+},
+
+{cat:"Python Extras", title:"Python Built-in Functions — Master Table", note:"Python ke saare important built-in functions ek jagah — interview mein sirf <code>len()</code>, <code>sorted()</code>, <code>map()</code> se kaam nahi chalega.",
+type:"table",
+headers:["Function","Kaam","Example"],
+rows:[
+["<code>len(x)</code>","Length","<code>len([1,2,3])</code> → 3"],
+["<code>type(x)</code>","Type check","<code>type(5)</code> → &lt;class 'int'&gt;"],
+["<code>isinstance(x,T)</code>","Type check (recommended)","<code>isinstance(5, int)</code> → True"],
+["<code>id(x)</code>","Memory address","<code>id(a) == id(b)</code> → same object?"],
+["<code>abs(x)</code>","Absolute value","<code>abs(-5)</code> → 5"],
+["<code>max(x)</code> / <code>min(x)</code>","Max/Min","<code>max([3,1,4])</code> → 4"],
+["<code>sum(x)</code>","Sum","<code>sum([1,2,3])</code> → 6"],
+["<code>sorted(x)</code>","New sorted list","<code>sorted([3,1])</code> → [1,3]"],
+["<code>enumerate(x)</code>","Index + value","<code>list(enumerate('abc'))</code> → [(0,'a'),...]"],
+["<code>zip(a,b)</code>","Pair elements","<code>list(zip([1,2],[3,4]))</code> → [(1,3),(2,4)]"],
+["<code>any(x)</code> / <code>all(x)</code>","Bool check","<code>any([0,0,1])</code> → True"],
+["<code>reversed(x)</code>","Reverse iterator","<code>list(reversed([1,2]))</code> → [2,1]"],
+["<code>input()</code>","User input","Returns string"],
+["<code>print()</code>","Output","<code>print(a, b, sep=',')</code>"],
+["<code>range()</code>","Number sequence","<code>range(1,10,2)</code> → 1,3,5,7,9"],
+["<code>map(fn,x)</code>","Apply function","<code>list(map(str,[1,2]))</code> → ['1','2']"],
+["<code>filter(fn,x)</code>","Filter items","<code>list(filter(None,[0,1]))</code> → [1]"],
+["<code>chr() / ord()</code>","Char ↔ ASCII","<code>chr(65)</code> → 'A', <code>ord('A')</code> → 65"],
+["<code>divmod(a,b)</code>","Quotient + remainder","<code>divmod(7,2)</code> → (3,1)"],
+["<code>globals() / locals()</code>","Scope variables","Debugging mein useful"]
+]},
+
+{cat:"Collections", title:"Heap Deep Dive — Kth Largest & Top K", note:"Heap DSA mein sabse zyada use hota hai — Kth largest, Top K, Median finding, Merge K sorted lists. Java <code>PriorityQueue</code> aur Python <code>heapq</code> dono min-heap by default.",
+type:"code",
+java:`// Kth largest element
+PriorityQueue<Integer> minH = new PriorityQueue<>();
+for (int x : arr) {
+    minH.offer(x);
+    if (minH.size() > k) minH.poll();
+}
+int kthLargest = minH.peek();  // O(n log k)
+
+// Max Heap — Collections.reverseOrder()
+PriorityQueue<Integer> maxH =
+    new PriorityQueue<>(Collections.reverseOrder());
+maxH.offer(3); maxH.offer(1); maxH.offer(5);
+maxH.peek();  // 5 (largest)
+
+// Kth smallest — use max heap
+PriorityQueue<Integer> kSmall =
+    new PriorityQueue<>(Collections.reverseOrder());`,
+python:`import heapq
+
+# Kth largest element
+min_h = []
+for x in arr:
+    heapq.heappush(min_h, x)
+    if len(min_h) > k:
+        heapq.heappop(min_h)
+kth_largest = min_h[0]  # O(n log k)
+
+# Max heap trick: negate values
+max_h = []
+heapq.heappush(max_h, -3)
+heapq.heappush(max_h, -1)
+heapq.heappush(max_h, -5)
+largest = -max_h[0]     # 5
+
+# Kth smallest — use min heap directly
+k_small = []            # same as Kth largest logic
+
+# Top K frequent — use Counter + heap
+from collections import Counter
+cnt = Counter(arr)
+top_k = heapq.nlargest(k, cnt.items(), key=lambda x: x[1])`,
+extra:"<b>Pattern yaad rakho:</b> Kth largest → min heap of size k. Kth smallest → max heap of size k (ya negate values in Python). <code>heapq.nlargest(k, arr)</code> = shortcut. Merge K sorted → heap mein sab lists ke first elements daalo, smallest nikalte jao. Time: O(n log k)."
+},
+
+{cat:"DSA Patterns", title:"Recursion Patterns — Subsets, Permutations, Combinations", note:"Interview mein recursion ke 3 classic patterns: subsets (include/exclude), permutations (swap), combinations (pick/skip). In teeno ko yaad karo — 80% backtracking problems isi se bante hain.",
+type:"code",
+java:`// Subsets — har element include ya exclude
+void subsets(int[] arr, int i, List<Integer> cur) {
+    if (i == arr.length) {
+        System.out.println(cur);
+        return;
+    }
+    cur.add(arr[i]);            // include
+    subsets(arr, i + 1, cur);
+    cur.remove(cur.size()-1);   // exclude
+    subsets(arr, i + 1, cur);
+}
+
+// Permutations — har position pe ek element fix
+void permute(int[] arr, int l) {
+    if (l == arr.length - 1) {
+        System.out.println(Arrays.toString(arr));
+        return;
+    }
+    for (int i = l; i < arr.length; i++) {
+        int temp = arr[l]; arr[l] = arr[i]; arr[i] = temp;
+        permute(arr, l + 1);
+        temp = arr[l]; arr[l] = arr[i]; arr[i] = temp; // undo
+    }
+}
+
+// Combinations — nCr — pick k from n
+void comb(int[] arr, int i, int k, List<Integer> cur) {
+    if (k == 0) { System.out.println(cur); return; }
+    if (i == arr.length) return;
+    cur.add(arr[i]);
+    comb(arr, i+1, k-1, cur);
+    cur.remove(cur.size()-1);
+    comb(arr, i+1, k, cur);
+}`,
+python:`# Subsets — har element include ya exclude
+def subsets(arr, i=0, cur=[]):
+    if i == len(arr):
+        print(cur)
+        return
+    subsets(arr, i+1, cur + [arr[i]])  # include
+    subsets(arr, i+1, cur)             # exclude
+
+# Permutations — har position pe ek element fix
+def permute(arr, l=0):
+    if l == len(arr) - 1:
+        print(arr)
+        return
+    for i in range(l, len(arr)):
+        arr[l], arr[i] = arr[i], arr[l]   # swap
+        permute(arr, l + 1)
+        arr[l], arr[i] = arr[i], arr[l]   # undo
+
+# Combinations — nCr — pick k from n
+def comb(arr, i=0, k=0, cur=[]):
+    if k == len(cur):
+        print(cur)
+        return
+    if i == len(arr):
+        return
+    comb(arr, i+1, k, cur + [arr[i]])  # pick
+    comb(arr, i+1, k, cur)             # skip
+
+# Python shortcut: itertools
+from itertools import combinations, permutations
+list(combinations([1,2,3], 2))   # [(1,2),(1,3),(2,3)]
+list(permutations([1,2,3], 2))  # [(1,2),(1,3),...]`,
+extra:"<b>3 patterns yaad karo:</b> (1) <b>Subsets</b> = 2ⁿ outcomes — har element ke liye include/exclude ka choice. (2) <b>Permutations</b> = n! outcomes — har position pe ek element fix karo by swapping. (3) <b>Combinations</b> = nCr — pick/skip approach. Interview mein ye patterns directly apply hote hain — N-Queens, Sudoku, Rat in Maze sab subsets/permutations ke variations hain."
+},
+
+{cat:"Java Extras", title:"File Handling — Java & Python", note:"Java ka file handling verbose hai (BufferedReader/Writer), Python ka simple (<code>open()</code>). DSA mein file handling rarely use hota hai, lekin coding interviews mein aata hai.",
+type:"code",
+java:`import java.io.*;
+import java.util.Scanner;
+
+// Reading — BufferedReader (fast)
+BufferedReader br = new BufferedReader(
+    new FileReader("file.txt"));
+String line;
+while ((line = br.readLine()) != null) {
+    System.out.println(line);
+}
+br.close();
+
+// Reading — Scanner
+Scanner sc = new Scanner(new File("file.txt"));
+while (sc.hasNextLine()) {
+    System.out.println(sc.nextLine());
+}
+
+// Writing — BufferedWriter
+BufferedWriter bw = new BufferedWriter(
+    new FileWriter("output.txt"));
+bw.write("Hello World");
+bw.newLine();
+bw.close();
+
+// try-with-resources (auto close)
+try (BufferedReader r = new BufferedReader(
+        new FileReader("file.txt"))) {
+    System.out.println(r.readLine());
+}`,
+python:`# Reading — with auto-closes file
+with open("file.txt") as f:
+    data = f.read()            # poora file
+with open("file.txt") as f:
+    lines = f.readlines()      # list of lines
+with open("file.txt") as f:
+    for line in f:             # memory efficient
+        print(line.strip())
+
+# Writing
+with open("output.txt", "w") as f:
+    f.write("Hello World\\n")
+
+# Append mode
+with open("log.txt", "a") as f:
+    f.write("new entry\\n")
+
+# JSON read/write
+import json
+with open("data.json") as f:
+    d = json.load(f)
+with open("data.json", "w") as f:
+    json.dump(d, f, indent=2)
+
+# CSV
+import csv
+with open("data.csv") as f:
+    reader = csv.reader(f)
+    for row in reader:
+        print(row)`,
+extra:"<b>Java vs Python:</b> Java ka <code>try-with-resources</code> auto-close karta hai (Python ka <code>with</code> statement same kaam karta hai). DSA mein <code>Scanner</code> / <code>BufferedReader</code> input lene ke liye use hota hai — <code>Scanner</code> slow hai, <code>BufferedReader</code> fast. Python mein <code>open()</code> + <code>with</code> sabke liye kaafi hai."
+},
+
 /* ========== CHAPTER 18 — FINAL ========== */
 {cat:"Final", title:"Master Table — Sab Kuch Ek Saath", note:"Poori handbook ka summary — interview ke pehle last-minute revision ke liye.",
 type:"table",
@@ -5141,11 +6099,14 @@ function toggleDone(i){
 }
 
 function highlightCode(code){
-  return esc(code)
-    .replace(/(#.*$|\/\/.*$)/gm,'<span class="cm">$1</span>')
-    .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,'<span class="str">$1</span>')
-    .replace(/\b(class|def|return|if|elif|else|for|in|while|import|from|try|except|finally|new|static|void|int|double|float|char|boolean|String|long|public|private|self|None|True|False|break|continue|lambda|with|as|pass|extends|super|is)\b/g,'<span class="kw">$1</span>')
-    .replace(/\b(\d+\.?\d*)\b/g,'<span class="num">$1</span>');
+  var s = esc(code), toks = [], ti = 0;
+  function tok(h){ var id='\x00T'+(ti++)+'\x00'; toks.push([id,h]); return id; }
+  s = s.replace(/(#.*$|\/\/.*$)/gm, function(m){ return tok('<span class="cm">'+m+'</span>'); });
+  s = s.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, function(m){ return tok('<span class="str">'+m+'</span>'); });
+  s = s.replace(/\b(class|def|return|if|elif|else|for|in|while|import|from|try|except|finally|new|static|void|int|double|float|char|boolean|String|long|public|private|self|None|True|False|break|continue|lambda|with|as|pass|extends|super|is)\b/g, function(m){ return tok('<span class="kw">'+m+'</span>'); });
+  s = s.replace(/\b(\d+\.?\d*)\b/g, function(m){ return tok('<span class="num">'+m+'</span>'); });
+  toks.forEach(function(t){ s = s.split(t[0]).join(t[1]); });
+  return s;
 }
 
 function buildDrawer(){
