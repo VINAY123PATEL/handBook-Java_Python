@@ -290,7 +290,64 @@
   #drawerList li.active{ background:var(--java-dim); color:var(--java); }
   #drawerList li.cat{
     font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--py-yellow);
-    text-transform:uconst DATA = [
+    text-transform:uppercase; letter-spacing:1.5px; cursor:default; padding-top:16px;
+  }
+  #drawerList li .num{ color:var(--muted-2); font-family:'JetBrains Mono',monospace; font-size:11px; }
+  #drawerList li.active .num{ color:var(--java); }
+  @media (max-width:780px){
+    .rosetta{ grid-template-columns:1fr; }
+    .col.java{ border-right:none; border-bottom:1px solid var(--line); }
+    .spine{ display:none; }
+    .head-right .hint{ display:none !important; }
+    header{ padding:12px 16px; }
+    main, .progress-wrap{ padding-left:16px; padding-right:16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand" title="Front page">
+    <div class="mark"><span class="j">JAVA</span> ⇄ <span class="p">PYTHON</span></div>
+    <h1>LeetCode — <b>Top 267</b></h1>
+  </div>
+  <div class="head-right">
+    <a class="index-toggle" href="index.html" title="Rosetta handbook kholo" onclick="if(window.parent&&window.parent.openPage){window.parent.openPage('rosetta');}return false;">📘 Handbook</a>
+    <div class="index-toggle" id="homeBtn" title="Front page pe jaao">⌂ Front</div>
+    <div class="index-toggle" id="drawerBtn">☰ Index <span class="hint" style="display:inline">(ya ←/→ keys)</span></div>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-meta">
+    <span id="metaLeft">SLIDE 1</span>
+    <span>POPULAR 267 · TOPIC-WISE</span>
+    <span id="metaRight">/ 267</span>
+  </div>
+</div>
+
+<main>
+  <div class="eyebrow" style="display:none"></div>
+  <div id="slide"></div>
+</main>
+
+<footer>
+  <div class="nav-row">
+    <button class="nav-btn" id="prevBtn">← Prev</button>
+    <div id="dotsMini"></div>
+    <button class="nav-btn" id="nextBtn">Next →</button>
+  </div>
+</footer>
+
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <h3>Index — 267 Questions</h3>
+  <ul id="drawerList"></ul>
+</div>
+
+<script>
+const DATA = [
 
 /* ========== FRONT PAGE (HOME) ========== */
 {type:"home", title:"Front Page", note:"", java:"", python:""},
@@ -8366,6 +8423,28 @@ function render(){
 
   const extraHtml = d.extra ? `<div class="extra-box"><span class="tag">Approach — kaise solve kiya</span>${d.extra}</div>` : '';
 
+  let descHtml = '';
+  if(d.desc){
+    descHtml = `<div class="prob-desc"><h3>Problem Statement</h3><p>${d.desc}</p>`;
+    if(d.examples && d.examples.length){
+      descHtml += `<div class="prob-examples">`;
+      d.examples.forEach((ex, ei)=>{
+        descHtml += `<div class="prob-ex">
+          <div class="ex-label">Example ${ei+1}</div>
+          <pre><code>Input: ${ex.input}\nOutput: ${ex.output}</code></pre>
+          ${ex.explanation ? '<div class="ex-exp">' + ex.explanation + '</div>' : ''}
+        </div>`;
+      });
+      descHtml += `</div>`;
+    }
+    if(d.constraints && d.constraints.length){
+      descHtml += `<div class="prob-constraints"><h4>Constraints</h4><ul>`;
+      d.constraints.forEach(c=>{ descHtml += `<li>${c}</li>`; });
+      descHtml += `</ul></div>`;
+    }
+    descHtml += `</div>`;
+  }
+
   if(d.type === 'home'){
     slideEl.innerHTML = buildHomeHtml();
   } else {
@@ -8373,80 +8452,6 @@ function render(){
     const badge = d.diff === 'H' ? '<span class="diff d-H">HARD</span>' : (d.diff === 'E' ? '<span class="diff d-E">EASY</span>' : '<span class="diff d-M">MEDIUM</span>');
     slideEl.innerHTML = `
       <div class="eyebrow"><span class="ch">Ch ${ch}/${catList.length}</span>${d.cat} · Q${qnum(d)} / ${DATA.length - 1} questions</div>
-      <h2>${d.title}${badge}</h2>
-      <p class="note">${d.note}</p>
-      ${bodyHtml}
-      ${extraHtml}
-      <div class="done-row">
-        <button class="done-btn${isDone(current) ? ' is-done' : ''}" data-i="${current}">${isDone(current) ? '✓ DONE — dabao to unmark' : 'Mark Done ✓'}</button>
-        <span class="done-count"><b>${getDone().length}</b> / ${DATA.length - 1} done</span>
-      </div>
-    `;
-  }
-
-  progressFill.style.width = ((current+1)/DATA.length*100) + '%';
-  metaLeft.textContent = 'SLIDE ' + (current+1);
-  metaRight.textContent = '/ ' + (DATA.length - 1) + ' · ' + getDone().length + ' ✓';
-  prevBtn.disabled = current === 0;
-  nextBtn.textContent = current === DATA.length - 1 ? 'Restart ↺' : 'Next →';
-
-  drawerList.querySelectorAll('li[data-i]').forEach(li=>{
-    li.classList.toggle('active', parseInt(li.dataset.i) === current);
-    li.classList.toggle('done', isDone(parseInt(li.dataset.i)));
-  });
-  dotsMini.querySelectorAll('span').forEach(s=>{
-    s.classList.toggle('active', parseInt(s.dataset.i) === current);
-  });
-
-  const activeLi = drawerList.querySelector('li.active');
-  if(activeLi) activeLi.scrollIntoView({block:'nearest'});
-
-  if(DATA[current].type === 'home'){
-    slideEl.querySelectorAll('.home-topic').forEach(btn=>{
-      btn.addEventListener('click', ()=> goTo(parseInt(btn.dataset.i)));
-    });
-  }
-  slideEl.querySelectorAll('.done-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      toggleDone(current);
-      render();
-    });
-  });
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-prevBtn.addEventListener('click', ()=> goTo(current - 1));
-nextBtn.addEventListener('click', ()=> goTo(current === DATA.length - 1 ? 0 : current + 1));
-document.addEventListener('keydown', (e)=>{
-  if(e.key === 'ArrowRight') nextBtn.click();
-  if(e.key === 'ArrowLeft') prevBtn.click();
-  if(e.key === 'Escape') closeDrawer();
-});
-
-const drawerBtn = document.getElementById('drawerBtn');
-const drawer = document.getElementById('drawer');
-const overlay = document.getElementById('overlay');
-function openDrawer(){ drawer.classList.add('open'); overlay.classList.add('open'); }
-function closeDrawer(){ drawer.classList.remove('open'); overlay.classList.remove('open'); }
-drawerBtn.addEventListener('click', openDrawer);
-overlay.addEventListener('click', closeDrawer);
-
-const homeBtn = document.getElementById('homeBtn');
-homeBtn.addEventListener('click', ()=> goTo(0));
-document.querySelector('.brand').addEventListener('click', ()=> goTo(0));
-
-buildDrawer();
-buildDotsMini();
-render();
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
-}
-</script>
-</body>
-</html>
-ass="eyebrow"><span class="ch">Ch ${ch}/${catList.length}</span>${d.cat} · Q${qnum(d)} / ${DATA.length - 1} questions</div>
       <h2>${d.title}${badge}</h2>
       <p class="note">${d.note}</p>
       ${descHtml}
