@@ -1,7 +1,7 @@
 {
-  "name": "DSA Hub",
+  "name": "DSA Hub (Java · Python · C++)",
   "short_name": "DSA Hub",
-  "description": "Java ⇄ Python DSA in Hinglish",
+  "description": "Java ⇄ Python ⇄ C++ DSA in Hinglish",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
