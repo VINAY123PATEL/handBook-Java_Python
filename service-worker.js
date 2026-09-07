@@ -1,4 +1,4 @@
-var CACHE = 'dsa-hub-v9';
+var CACHE = 'dsa-hub-v10';
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
@@ -8,7 +8,14 @@ self.addEventListener('install', function (event) {
         './rosetta-dsa.html',
         './leetcode-200.html',
         './icon-192.png',
-        './icon-512.png'
+        './icon-512.png',
+        './pdfs/DSA_Complete_Notes.pdf',
+        './pdfs/OOP_Complete_Notes.pdf',
+        './pdfs/SE_Complete_Notes.pdf',
+        './pdfs/OS_Complete_Notes.pdf',
+        './pdfs/COA_Complete_Notes.pdf',
+        './pdfs/DBMS_Complete_Notes.pdf',
+        './pdfs/CN_Complete_Notes.pdf'
       ]);
     })
   );

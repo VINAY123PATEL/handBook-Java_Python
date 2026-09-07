@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Java ⇄ Python — DSA Hub</title>
+<title>Java ⇄ Python — DSA & Semester Notes Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.webmanifest">
@@ -84,52 +84,38 @@
     margin-top:44px; color:var(--muted-2); font-family:'JetBrains Mono',monospace;
     font-size:12px; text-align:center; line-height:1.8;
   }
-  .lock{
-    position:fixed; inset:0; z-index:999;
-    background:
-      radial-gradient(900px 500px at 20% -10%, rgba(239,139,40,0.10), transparent 60%),
-      radial-gradient(900px 600px at 110% 10%, rgba(75,139,212,0.12), transparent 55%),
-      var(--bg);
-    display:none; align-items:center; justify-content:center; padding:20px;
-  }
-  .lock.show{ display:flex; }
-  .lock-box{
-    width:100%; max-width:380px;
-    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
-    padding:30px; text-align:center;
-  }
-  .lock-box h2{ margin:0 0 8px 0; font-size:22px; }
-  .lock-box p{ color:var(--muted); font-size:13.5px; line-height:1.6; margin:0 0 20px 0; }
-  .lock-box input{
-    width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--text);
-    font-family:'JetBrains Mono',monospace; font-size:18px; text-align:center; letter-spacing:4px;
-    padding:13px; border-radius:10px; outline:none; margin-bottom:10px;
-  }
-  .lock-box input:focus{ border-color:var(--java); }
-  .lock-row{ display:flex; gap:10px; }
-  .lock-btn{
-    flex:1; border:1px solid var(--line); background:var(--panel-2); color:var(--muted);
-    font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:1px;
-    padding:12px; border-radius:10px; cursor:pointer;
-  }
-  .lock-btn.ok{
-    color:#0b0e13; font-weight:700; border:none;
-    background:linear-gradient(135deg,var(--java),var(--py-yellow));
-  }
-  .lock-cp-link{ margin-top:16px; }
-  .lock-cp-link a{ color:var(--py-yellow); text-decoration:none; cursor:pointer; font-size:12.5px; }
-  .lock-cp-link a:hover{ text-decoration:underline; }
-  .lock-err{ color:#ff6b6b; font-family:'JetBrains Mono',monospace; font-size:12px; min-height:18px; margin-top:10px; }
   .foot a{ color:var(--py-yellow); text-decoration:none; cursor:pointer; }
   .foot a:hover{ text-decoration:underline; }
+  .pdf-sec{ width:100%; max-width:920px; margin-top:8px; }
+  .pdf-head{ display:flex; align-items:baseline; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .pdf-sec h2{ font-size:21px; font-weight:700; margin:0 0 4px 0; }
+  .pdf-sec .sub{ color:var(--muted); font-size:13.5px; margin:0 0 18px 0; }
+  .pdf-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+  .pcard{
+    display:flex; flex-direction:column;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:18px; text-decoration:none; color:inherit; transition:.16s;
+  }
+  .pcard:hover{ transform:translateY(-3px); border-color:var(--py-yellow); }
+  .pcard .ptag{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:1px;
+    color:var(--py-blue); text-transform:uppercase; margin-bottom:10px;
+  }
+  .pcard h3{ margin:0 0 8px 0; font-size:17px; font-weight:700; }
+  .pcard .pdesc{ color:var(--muted); font-size:12.5px; line-height:1.5; margin:0 0 14px 0; flex:1; }
+  .pcard .pgo{
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:1px;
+    color:var(--java); border:1px solid rgba(239,139,40,0.4); background:var(--java-dim);
+    padding:8px 12px; border-radius:8px; text-align:center;
+  }
   @media (max-width:640px){ body{padding:28px 16px;} }
 </style>
 </head>
 <body>
 
   <div class="mark"><span class="j">JAVA</span> ⇄ <span class="p">PYTHON</span></div>
-  <h1>DSA Learning Hub</h1>
-  <p class="lead">Java aur Python dono ek saath seekho — theory handbook aur 267 popular LeetCode questions ke solutions ke saath. Neeche ek card pe click karke khud dekho.</p>
+  <h1>DSA &amp; Notes Hub</h1>
+  <p class="lead">Java aur Python dono ek saath seekho — theory handbook aur 267 popular LeetCode questions ke solutions ke saath. Neeche saare semester subjects ke complete PDF notes bhi milenge.</p>
 
   <div class="grid">
     <a class="card" href="rosetta-dsa.html">
@@ -157,195 +143,49 @@
     </a>
   </div>
 
-  <div class="foot">Java ⇄ Python · DSA in Hinglish<br>← / → keys se slide navigate, ☰ Index se kahin bhi jaao · <a id="changePass">Change Password</a></div>
-
-  <div class="lock" id="lock">
-    <div class="lock-box">
-      <h2>App Locked</h2>
-      <p>Neeche password daal kar UNLOCK dabao. Pehli baar unlock karne ke baad app hamesha khula rahega.</p>
-      <input type="password" id="lockPass" placeholder="Password" autocomplete="off">
-      <div class="lock-err" id="lockErr"></div>
-      <div class="lock-row">
-        <button class="lock-btn ok" id="lockBtn">UNLOCK</button>
-      </div>
-      <p class="lock-cp-link"><a id="lockChangePass">Change Password</a></p>
+  <div class="pdf-sec">
+    <div class="pdf-head">
+      <h2>📄 Semester Notes (PDF)</h2>
+      <span class="sub" id="pdfCount"></span>
     </div>
+    <p class="sub">Saare subjects ke complete class notes — tap karke PDF kholo / download karo.</p>
+    <div class="pdf-grid" id="pdfGrid"></div>
   </div>
 
-  <div class="lock" id="cp">
-    <div class="lock-box">
-      <h2>Change Password</h2>
-      <p>Pehle current password daalo, phir naya password set karo.</p>
-      <input type="password" id="cpCur" placeholder="Current password" autocomplete="off">
-      <input type="password" id="cpNew" placeholder="Naya password" autocomplete="off">
-      <input type="password" id="cpNew2" placeholder="Naya password (dobara)" autocomplete="off">
-      <div class="lock-err" id="cpErr"></div>
-      <div class="lock-row">
-        <button class="lock-btn" id="cpCancel">CANCEL</button>
-        <button class="lock-btn ok" id="cpSave">SAVE</button>
-      </div>
-    </div>
-  </div>
+  <div class="foot">Java ⇄ Python · DSA in Hinglish<br>← / → keys se slide navigate, ☰ Index se kahin bhi jaao</div>
 
 <script>
 (function () {
-  function sha256(ascii) {
-    function rightRotate(value, amount) {
-      return (value >>> amount) | (value << (32 - amount));
-    }
-    var mathPow = Math.pow;
-    var maxWord = mathPow(2, 32);
-    var lengthProperty = 'length';
-    var i, j;
-    var result = '';
-    var words = [];
-    var asciiBitLength = ascii[lengthProperty] * 8;
-
-    var hash = sha256.h = sha256.h || [];
-    var k = sha256.k = sha256.k || [];
-    var primeCounter = k[lengthProperty];
-
-    var isComposite = {};
-    for (var candidate = 2; primeCounter < 64; candidate++) {
-      if (!isComposite[candidate]) {
-        for (i = 0; i < 313; i += candidate) {
-          isComposite[i] = candidate;
-        }
-        hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
-        k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
-      }
-    }
-
-    ascii += '\x80';
-    while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
-    for (i = 0; i < ascii[lengthProperty]; i++) {
-      j = ascii.charCodeAt(i);
-      if (j >> 8) return;
-      words[i >> 2] |= j << ((3 - i) % 4) * 8;
-    }
-    words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
-    words[words[lengthProperty]] = (asciiBitLength);
-
-    for (j = 0; j < words[lengthProperty];) {
-      var w = words.slice(j, j += 16);
-      var oldHash = hash.slice(0, 8);
-
-      for (i = 0; i < 64; i++) {
-        var w15 = w[i - 15], w2 = w[i - 2];
-        var a = hash[0], e = hash[4];
-        var temp1 = hash[7]
-          + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
-          + ((e & hash[5]) ^ ((~e) & hash[6]))
-          + k[i]
-          + (w[i] = (i < 16) ? w[i] : (
-              w[i - 16]
-              + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
-              + w[i - 7]
-              + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
-            ) | 0);
-        var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
-          + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
-
-        hash = [(temp1 + temp2) | 0].concat(hash);
-        hash[4] = (hash[4] + temp1) | 0;
-      }
-
-      for (i = 0; i < 8; i++) {
-        hash[i] = (hash[i] + oldHash[i]) | 0;
-      }
-    }
-
-    for (i = 0; i < 8; i++) {
-      for (j = 3; j + 1; j--) {
-        var b = (hash[i] >> (j * 8)) & 255;
-        result += ((b < 16) ? 0 : '') + b.toString(16);
-      }
-    }
-    return result;
-  }
-
-  var DEFAULT_PIN_HASH = 'a20a2b7bb0842d5cf8a0c06c626421fd51ec103925c1819a51271f2779afa730';
-  var PIN_KEY = 'dsa_pin';
-  var UNLOCK_KEY = 'dsa_unlocked';
-
-  var mem = {};
-  var storeOk = true;
-  try { localStorage.setItem('__dsa_t__', '1'); localStorage.removeItem('__dsa_t__'); }
-  catch (e) { storeOk = false; }
-
-  function sget(k) {
-    if (storeOk) { try { return localStorage.getItem(k); } catch (e) {} }
-    return (k in mem) ? mem[k] : null;
-  }
-  function sset(k, v) {
-    if (storeOk) { try { localStorage.setItem(k, v); return; } catch (e) {} }
-    mem[k] = v;
-  }
-
-  function matchesPin(input) {
-    var stored = sget(PIN_KEY);
-    if (!stored) return sha256(input) === DEFAULT_PIN_HASH;
-    if (/^[0-9a-f]{64}$/.test(stored)) return sha256(input) === stored;
-    return input === stored;
-  }
-  function show(el) { el.classList.add('show'); }
-  function hide(el) { el.classList.remove('show'); }
-
-  var lock = document.getElementById('lock');
-  var lockErr = document.getElementById('lockErr');
-  var lockPass = document.getElementById('lockPass');
-  var lockBtn = document.getElementById('lockBtn');
-
-  if (sget(UNLOCK_KEY) !== '1') {
-    show(lock);
-    lockPass.focus();
-    function tryUnlock() {
-      if (matchesPin(lockPass.value)) {
-        sset(UNLOCK_KEY, '1');
-        hide(lock);
-      } else {
-        lockErr.textContent = 'Galat password. Dobara try karo.';
-        lockPass.value = '';
-        lockPass.focus();
-      }
-    }
-    lockBtn.addEventListener('click', tryUnlock);
-    lockPass.addEventListener('keydown', function (e) { if (e.key === 'Enter') tryUnlock(); });
-  }
-
-  var cp = document.getElementById('cp');
-  var cpErr = document.getElementById('cpErr');
-  document.getElementById('changePass').addEventListener('click', function () {
-    cpErr.textContent = '';
-    document.getElementById('cpCur').value = '';
-    document.getElementById('cpNew').value = '';
-    document.getElementById('cpNew2').value = '';
-    show(cp);
-    document.getElementById('cpCur').focus();
+  var pdfs = [
+    { f: "DSA_Complete_Notes.pdf", t: "Data Structures & Algorithms", d: "Java DSA complete notes — arrays se graphs tak, har topic ke examples ke saath." },
+    { f: "OOP_Complete_Notes.pdf", t: "Object-Oriented Programming", d: "OOP concepts, classes, inheritance, polymorphism, exception handling — complete." },
+    { f: "SE_Complete_Notes.pdf", t: "Software Engineering", d: "Process models, requirements, design, testing, SCM, project management." },
+    { f: "OS_Complete_Notes.pdf", t: "Operating Systems", d: "Process, scheduling, memory, deadlock, file systems — practical examples ke saath." },
+    { f: "COA_Complete_Notes.pdf", t: "Computer Organisation", d: "CPU, control unit, arithmetic, I/O, memory, pipelining, RISC/CISC." },
+    { f: "DBMS_Complete_Notes.pdf", t: "Database Management", d: "ER model, normalization, SQL, transactions, PL/SQL, MySQL/Oracle." },
+    { f: "CN_Complete_Notes.pdf", t: "Computer Networks", d: "OSI/TCP-IP, DLL, MAC, IP/subnetting, routing, TCP, application layer." },
+    { f: "Cyber_Security_Unit_1_Notes.pdf", t: "Cyber Security", d: "Complete cyber security notes (5 unit files)." },
+    { f: "Cyber_Security_Unit_2_Notes.pdf", t: "Cyber Security", d: "Cyber security Unit 2 notes." },
+    { f: "Cyber_Security_Unit_3_Notes.pdf", t: "Cyber Security", d: "Cyber security Unit 3 notes." },
+    { f: "Cyber_Security_Unit_4_Notes.pdf", t: "Cyber Security", d: "Cyber security Unit 4 notes." },
+    { f: "Cyber_Security_Unit_5_Notes.pdf", t: "Cyber Security", d: "Cyber security Unit 5 notes." }
+  ];
+  var grid = document.getElementById('pdfGrid');
+  pdfs.forEach(function (p) {
+    var a = document.createElement('a');
+    a.className = 'pcard';
+    a.href = 'pdfs/' + p.f;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    var h = '';
+    h += '<div class="ptag">PDF Notes</div>';
+    h += '<h3>' + p.t + '</h3>';
+    h += '<p class="pdesc">' + p.d + '</p>';
+    h += '<span class="pgo">KHOLO PDF →</span>';
+    a.innerHTML = h;
+    grid.appendChild(a);
   });
-  document.getElementById('lockChangePass').addEventListener('click', function () {
-    cpErr.textContent = '';
-    document.getElementById('cpCur').value = '';
-    document.getElementById('cpNew').value = '';
-    document.getElementById('cpNew2').value = '';
-    show(cp);
-    document.getElementById('cpCur').focus();
-  });
-  document.getElementById('cpCancel').addEventListener('click', function () { hide(cp); });
-
-  function changePass() {
-    var cur = document.getElementById('cpCur').value;
-    var n1 = document.getElementById('cpNew').value;
-    var n2 = document.getElementById('cpNew2').value;
-    if (!matchesPin(cur)) { cpErr.textContent = 'Current password galat hai.'; return; }
-    if (n1.length < 4) { cpErr.textContent = 'Naya password kam se kam 4 characters ka ho.'; return; }
-    if (n1 !== n2) { cpErr.textContent = 'Naya password dono jagah match nahi kar raha.'; return; }
-    sset(PIN_KEY, sha256(n1));
-    sset(UNLOCK_KEY, '1');
-    cpErr.textContent = '';
-    hide(cp);
-  }
-  document.getElementById('cpSave').addEventListener('click', changePass);
+  document.getElementById('pdfCount').textContent = pdfs.length + ' PDFs available';
 })();
 </script>
 <script>
