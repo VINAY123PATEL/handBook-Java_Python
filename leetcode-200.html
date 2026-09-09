@@ -586,48 +586,5 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
 </script>
-<style>
-  .lock-ov{position:fixed;inset:0;z-index:999999;background:rgba(8,12,28,0.98);display:flex;align-items:center;justify-content:center;padding:24px;}
-  .lock-box{background:#111936;border:1px solid #2a2f4a;border-radius:14px;padding:30px 26px;max-width:320px;width:100%;text-align:center;box-shadow:0 18px 60px rgba(0,0,0,0.55);}
-  .lock-box h2{margin:0 0 6px;font-size:19px;color:#e8ebf8;letter-spacing:1px;}
-  .lock-box p{margin:0 0 16px;font-size:12.5px;color:#9aa3c7;}
-  .lock-box input{width:100%;box-sizing:border-box;padding:12px;border-radius:9px;border:1px solid #2a2f4a;background:#0b1022;color:#e8ebf8;letter-spacing:8px;text-align:center;font-size:20px;outline:none;}
-  .lock-box input:focus{border-color:#7c5cff;}
-  .lock-box .err{color:#ff6b6b;font-size:12px;min-height:16px;margin-top:8px;}
-  .lock-btn{margin-top:14px;width:100%;padding:12px;border:none;border-radius:9px;background:linear-gradient(135deg,#7c5cff,#e8590c);color:#fff;font-weight:700;font-size:14px;cursor:pointer;}
-  .lock-btn:active{transform:translateY(1px);}
-</style>
-<div id="lockOv" class="lock-ov">
-  <div class="lock-box">
-    <h2>DSA Hub</h2>
-    <p>Apna PIN daalein</p>
-    <input type="password" id="lockPin" autocomplete="off" placeholder="* * * *" maxlength="8">
-    <div class="err" id="lockErr"></div>
-    <button class="lock-btn" id="lockGo" type="button">Unlock</button>
-  </div>
-</div>
-<script>
-(function(){
-  var LS="dsaPinUnlock";
-  try{ if(localStorage.getItem(LS)==="2005"){return;} }catch(e){}
-  var ov=document.getElementById("lockOv"),
-      pin=document.getElementById("lockPin"),
-      err=document.getElementById("lockErr"),
-      go=document.getElementById("lockGo");
-  var submit=function(){
-    if(pin.value==="2005"){
-      try{ localStorage.setItem(LS,"2005"); }catch(e){}
-      ov.style.display="none";
-    } else {
-      err.textContent="Galat PIN, dobara try karo";
-      pin.value=""; pin.focus();
-      setTimeout(function(){ err.textContent=""; },2200);
-    }
-  };
-  go.addEventListener("click",submit);
-  pin.addEventListener("keydown",function(e){ if(e.key==="Enter"){ submit(); } });
-  pin.focus();
-})();
-</script>
 </body>
 </html>
