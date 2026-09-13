@@ -607,6 +607,7 @@ const TOTAL_PROBLEMS = topics.reduce((n,t)=>n+t.problems.length, 0);
 const problemIndex = {};
 topics.forEach(t => t.problems.forEach(p => { problemIndex[p.id] = { ...p, topicName:t.name, topicKey:t.key }; }));
 
+var lang = "Python";
 const DIFF = {
   arr1:"e",arr2:"e",arr3:"m",arr4:"m",arr5:"e",arr6:"e",arr7:"m",arr8:"m",arr9:"h",arr10:"m",arr11:"m",arr12:"m",arr13:"e",arr14:"m",arr15:"m",arr16:"e",arr17:"h",arr18:"h",arr19:"h",arr20:"h",arr21:"h",arr22:"h",arr23:"h",arr24:"h",arr25:"h",arr26:"m",
   str1:"e",str2:"m",str3:"m",str4:"m",str5:"e",str6:"e",str7:"m",str8:"h",str9:"h",str10:"m",str11:"m",str12:"h",str13:"h",str14:"h",str15:"h",str16:"h",str17:"h",str18:"h",str19:"h",str20:"m",str21:"m",str22:"m",str23:"m",
@@ -638,6 +639,7 @@ const STORAGE_KEY = "dsa_practice_progress_v1";
 const SETTINGS_REF = "settings/general";
 
 let progress = {
+  language: "Python",
   solved: {},
   code: {},
   chats: {},
