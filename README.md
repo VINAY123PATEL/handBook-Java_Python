@@ -8,7 +8,7 @@ Java ⇄ Python ⇄ C++ — DSA Learning Hub with Firebase login (email/password
 - `usage.js` — daily usage limits (Firestore per-user tracking)
 - `rosetta-dsa.html` — DSA Handbook (theory + code + quizzes, 20 chapters)
 - `leetcode-200.html` — LeetCode Top 267 (topic-wise chapters, Java + Python + C++ solutions)
-- `codingPrac.html` — DSA Practice Console (204 problems, AI code-gen + AI review via OpenRouter/Gemini)
+- `codingPrac.html` — DSA Practice Console (204 problems, AI code-gen + AI review via OpenRouter/Gemini, progress cross-device sync via Firestore)
 - `pdfs/` — complete placement notes (coloured-vector PDFs): DSA, OOP, SE, OS, COA, DBMS, CN + Cyber Security (all units combined)
 
 Live: https://vinay123patel.github.io/handBook-Java_Python/
@@ -30,6 +30,9 @@ service cloud.firestore {
       allow write: if request.auth.token.email == 'vinay9009patel@gmail.com';
     }
     match /usage/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+    match /progress/{userId} {
       allow read, write: if request.auth.uid == userId;
     }
   }

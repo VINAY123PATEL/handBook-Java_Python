@@ -443,11 +443,75 @@ function saveProgress(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
   }catch(e){ console.error("Could not save progress:", e); }
+  scheduleFirebaseSave();
+}
+
+var fbSyncTimer = null;
+var fbSyncPending = false;
+
+function scheduleFirebaseSave(){
+  if (!window.firebase || !firebase.auth || !firebase.auth().currentUser) return;
+  if (!(window.firebase && firebase.firestore)) {
+    loadFirestoreCompat(function () { scheduleFirebaseSave(); });
+    return;
+  }
+  if (fbSyncPending) return;
+  fbSyncPending = true;
+  clearTimeout(fbSyncTimer);
+  fbSyncTimer = setTimeout(function () {
+    fbSyncPending = false;
+    pushProgressToFirebase();
+  }, 1200);
+}
+
+function pushProgressToFirebase(){
+  try {
+    var user = firebase.auth() && firebase.auth().currentUser;
+    if (!user) return;
+    firebase.firestore().collection("progress").doc(user.uid).set({
+      data: JSON.stringify(progress),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(function (e) { console.warn("Firestore progress save failed:", e); });
+  } catch (e) { }
+}
+
+function loadProgressFromFirebase(){
+  try {
+    if (!window.firebase || !firebase.auth) return;
+    firebase.auth().onAuthStateChanged(function (user) {
+      if (!user) return;
+      loadFirestoreCompat(function () {
+        try {
+          firebase.firestore().collection("progress").doc(user.uid).get().then(function (doc) {
+            if (!doc.exists) {
+              pushProgressToFirebase();
+              return;
+            }
+            var d = doc.data();
+            if (d && d.data) {
+              var parsed = JSON.parse(d.data);
+              if (parsed && typeof parsed === "object") {
+                progress = Object.assign({ solved:{}, code:{}, chats:{}, reviews:{}, model: progress.model, language: progress.language }, parsed);
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch (e) { }
+                renderAll();
+              }
+            }
+          }).catch(function (e) { console.warn("Firestore progress load failed:", e); });
+        } catch (e) { }
+      });
+    });
+  } catch (e) { }
 }
 
 function clearProgress(){
   try{ localStorage.removeItem(STORAGE_KEY); }catch(e){ }
   progress = { solved:{}, code:{}, chats:{}, reviews:{}, model: progress.model, language: progress.language };
+  try {
+    var user = window.firebase && firebase.auth && firebase.auth().currentUser;
+    if (user && window.firebase && firebase.firestore) {
+      firebase.firestore().collection("progress").doc(user.uid).delete().catch(function(){});
+    }
+  } catch(e){ }
 }
 
 /* ============ HELPERS ============ */
@@ -980,6 +1044,7 @@ document.getElementById("retakeAllBtn").addEventListener("click", () => {
   loadProgressSync();
   progressLoaded = true;
   renderAll();
+  loadProgressFromFirebase();
 })();
 
 /* ============ FIREBASE: OPENROUTER KEY FROM FIRESTORE (optional) ============ */
