@@ -169,7 +169,7 @@
       "</div>" +
       "</div>" +
       '<label for="dsaName">Name</label>' +
-      '<input type="text" id="dsaName" placeholder="Apna naam" value="' + (user.displayName || "").replace(/"/g, "&quot;") + '">' +
+      '<input type="text" id="dsaName" placeholder="Enter your name">' +
       '<label for="dsaGender">Gender</label>' +
       '<select id="dsaGender">' +
       '<option value="male"' + (user.gender === "male" ? " selected" : "") + ">Male</option>" +
@@ -213,8 +213,8 @@
 
     overlay.querySelector("#dsaSaveBtn").addEventListener("click", function () {
       var name = (overlay.querySelector("#dsaName").value || "").trim();
-      if (!name) { setMsg("Apna naam bharo.", false); return; }
-      saveFields({ displayName: name, gender: overlay.querySelector("#dsaGender").value, photo: user.photo });
+      var finalName = name ? name : user.displayName;
+      saveFields({ displayName: finalName, gender: overlay.querySelector("#dsaGender").value, photo: user.photo });
       storageSet();
       setMsg("Profile save ho gayi.", true);
       setTimeout(close, 700);
