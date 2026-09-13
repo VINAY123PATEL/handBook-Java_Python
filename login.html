@@ -324,6 +324,7 @@
   }
 
   var loadCount = 0;
+  var authTaskPending = false;
   function loadScript(src, onload) {
     var s = document.createElement("script");
     s.src = src;
@@ -341,7 +342,7 @@
       } catch (e) { }
       firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function () { });
       firebase.auth().onAuthStateChanged(function (user) {
-        if (user) redirectAfterAuth();
+        if (user && !authTaskPending) redirectAfterAuth();
       });
     });
   });
@@ -376,12 +377,14 @@
 
     submitBtn.disabled = true;
     submitBtn.textContent = mode === "login" ? "LOGIN HOO RAHA HAI..." : "ACCOUNT BAN RAHA HAI...";
+    authTaskPending = true;
 
     var task = mode === "login"
       ? firebase.auth().signInWithEmailAndPassword(email, pass)
       : firebase.auth().createUserWithEmailAndPassword(email, pass);
 
     task.then(function (res) {
+      authTaskPending = false;
       if (mode === "register") {
         var regName = nameEl.value.trim();
         var user = res && res.user;
@@ -395,6 +398,7 @@
       }
       setTimeout(redirectAfterAuth, 600);
     }).catch(function (err) {
+      authTaskPending = false;
       submitBtn.disabled = false;
       submitBtn.textContent = mode === "login" ? "LOGIN →" : "CREATE ACCOUNT →";
       showMsg(friendlyError(err), false);

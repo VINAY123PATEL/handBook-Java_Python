@@ -80,24 +80,31 @@
     window.dispatchEvent(new CustomEvent("dsa:profile-updated", { detail: user }));
   }
 
-  function initialsLabel(name) {
-    if (name && name.trim()) return name.trim().charAt(0).toUpperCase();
-    return "?";
+  function initialsLabel(name, email) {
+    var src = String(name || email || "?").trim();
+    return src ? src.charAt(0).toUpperCase() : "?";
   }
 
-  function avatarMarkup(name, photo, sizeClass) {
+  function resolveName() {
+    var fb = null;
+    try { fb = currentUser(); } catch (e) { }
+    return user.displayName || (fb && fb.displayName) || user.email || (fb && fb.email) || "";
+  }
+
+  function avatarMarkup(name, email, photo, sizeClass) {
     var cls = sizeClass || "dsa-avatar-sm";
     if (photo) return '<span class="dsa-avatar ' + cls + '" style="background-image:url(' + photo + ')"></span>';
-    return '<span class="dsa-avatar ' + cls + ' dsa-avatar-initial">' + initialsLabel(name) + '</span>';
+    return '<span class="dsa-avatar ' + cls + ' dsa-avatar-initial">' + initialsLabel(name, email) + '</span>';
   }
 
   function render() {
+    var name = resolveName();
     var els = document.querySelectorAll("[data-dsa-name]");
     for (var i = 0; i < els.length; i++) {
-      els[i].textContent = user.displayName || user.email || "";
+      els[i].textContent = name || "Account";
     }
     var avs = document.querySelectorAll("[data-dsa-avatar]");
-    var tmp = avatarMarkup(user.displayName, user.photo);
+    var tmp = avatarMarkup(user.displayName, user.email, user.photo);
     for (var j = 0; j < avs.length; j++) {
       avs[j].innerHTML = tmp;
     }
@@ -162,7 +169,7 @@
       '<h3>My Profile</h3>' +
       '<p class="dsa-sub">' + (user.email || (u && u.email) || "") + "</p>" +
       '<div class="dsa-avatar-preview">' +
-      '<span id="dsaAvatar" data-dsa-avatar>' + avatarMarkup(user.displayName, user.photo) + "</span>" +
+      '<span id="dsaAvatar">' + avatarMarkup(user.displayName, user.email, user.photo) + "</span>" +
       '<div style="flex:1;min-width:0">' +
       '<label>Profile photo (optional)</label>' +
       '<span class="dsa-file-btn">Choose photo…<input type="file" id="dsaPhotoInput" accept="image/*"></span>' +
@@ -207,7 +214,7 @@
       resizeImage(file, 200, function (dataURL) {
         user.photo = dataURL;
         var av = overlay.querySelector("#dsaAvatar");
-        av.innerHTML = avatarMarkup(user.displayName, user.photo);
+        av.innerHTML = avatarMarkup(user.displayName, user.email, user.photo);
       });
     });
 
