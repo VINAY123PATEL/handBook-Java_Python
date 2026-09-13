@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /settings/{doc} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.token.email == 'vinay9009patel@gmail.com';
+    }
+    match /usage/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+    match /progress/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+    match /leaderboard/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+    }
+  }
+}
