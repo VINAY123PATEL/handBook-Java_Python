@@ -186,6 +186,7 @@
       '<div class="dsa-note">Photo sirf account ke liye save hoti hai (Firestore users/{uid}), optional hai. Password change ke liye reset email aayega.</div>' +
       '<div class="dsa-msg" id="dsaMsg"></div>' +
       '<div class="dsa-btns">' +
+      '<button class="dsa-btn dsa-btn-plain" id="dsaCloseBtn" type="button">Close</button>' +
       '<button class="dsa-btn dsa-btn-plain" id="dsaPwBtn" type="button">Change password</button>' +
       '<button class="dsa-btn dsa-btn-danger" id="dsaLogoutBtn" type="button">Log out</button>' +
       '<button class="dsa-btn dsa-btn-save" id="dsaSaveBtn" type="button">Save</button>' +
@@ -194,8 +195,10 @@
 
     document.body.appendChild(overlay);
 
+    var prevPhoto = user.photo;
     function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
-    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    function closeNoSave() { user.photo = prevPhoto; close(); }
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeNoSave(); });
 
     function setMsg(text, okFlag) {
       var el = overlay.querySelector("#dsaMsg");
@@ -226,6 +229,8 @@
       setMsg("Profile save ho gayi.", true);
       setTimeout(close, 700);
     });
+
+    overlay.querySelector("#dsaCloseBtn").addEventListener("click", closeNoSave);
 
     overlay.querySelector("#dsaPwBtn").addEventListener("click", function () {
       var email = user.email || (u && u.email);
