@@ -91,6 +91,13 @@
   .solved-dot{width:9px;height:9px;border-radius:50%;background:#D8DEE8;flex-shrink:0;}
   .solved-dot.done{background:var(--accent);}
   .problem-toggle{font-size:12.5px;color:var(--steel);font-weight:600;}
+  .prob-e{border-left:4px solid #10b981;}
+  .prob-m{border-left:4px solid #f59e0b;}
+  .prob-h{border-left:4px solid #ef4444;}
+  .diff-badge{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.6px;margin-left:8px;flex-shrink:0;}
+  .diff-badge.e{background:#d1fae5;color:#065f46;}
+  .diff-badge.m{background:#fef3c7;color:#92400e;}
+  .diff-badge.h{background:#fee2e2;color:#991b1b;}
   .problem-body{padding:0 18px 18px;border-top:1px solid var(--line);}
   .problem-statement{font-size:13.5px;color:#4A5771;line-height:1.6;margin:14px 0;}
   .problem-statement code{background:#F4F4F4;padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:12.5px;}
@@ -406,6 +413,30 @@ const TOTAL_PROBLEMS = topics.reduce((n,t)=>n+t.problems.length, 0);
 const problemIndex = {};
 topics.forEach(t => t.problems.forEach(p => { problemIndex[p.id] = { ...p, topicName:t.name }; }));
 
+const DIFF = {
+  arr1:"e",arr2:"e",arr3:"m",arr4:"m",arr5:"e",arr6:"e",arr7:"m",arr8:"m",arr9:"h",arr10:"m",arr11:"m",arr12:"m",arr13:"e",arr14:"m",arr15:"m",arr16:"e",
+  str1:"e",str2:"m",str3:"m",str4:"m",str5:"e",str6:"e",str7:"m",str8:"h",str9:"h",str10:"m",str11:"m",str12:"h",
+  se1:"e",se2:"m",se3:"m",se4:"m",se5:"m",se6:"m",se7:"e",se8:"m",se9:"h",se10:"h",se11:"h",se12:"m",
+  so1:"m",so2:"m",so3:"m",so4:"m",so5:"e",so6:"e",so7:"e",so8:"m",so9:"m",so10:"m",so11:"m",so12:"m",
+  ha1:"m",ha2:"m",ha3:"h",ha4:"e",ha5:"m",ha6:"m",ha7:"e",ha8:"m",ha9:"m",ha10:"m",ha11:"m",ha12:"m",
+  ll1:"e",ll2:"e",ll3:"e",ll4:"m",ll5:"e",ll6:"e",ll7:"e",ll8:"m",ll9:"m",ll10:"m",ll11:"m",ll12:"h",
+  sq1:"e",sq2:"m",sq3:"e",sq4:"m",sq5:"m",sq6:"h",sq7:"m",sq8:"h",sq9:"h",sq10:"m",sq11:"m",sq12:"m",
+  tr1:"e",tr2:"m",tr3:"m",tr4:"m",tr5:"e",tr6:"e",tr7:"e",tr8:"m",tr9:"h",tr10:"h",tr11:"m",tr12:"m",
+  he1:"e",he2:"m",he3:"h",he4:"h",he5:"m",he6:"m",he7:"m",he8:"m",he9:"h",he10:"h",he11:"h",he12:"m",
+  gr1:"m",gr2:"m",gr3:"m",gr4:"m",gr5:"m",gr6:"m",gr7:"m",gr8:"m",gr9:"h",gr10:"h",gr11:"h",gr12:"h",gr13:"m",gr14:"m",gr15:"m",gr16:"m",
+  re1:"m",re2:"m",re3:"h",re4:"m",re5:"m",re6:"m",re7:"m",re8:"m",re9:"h",re10:"m",re11:"m",re12:"m",
+  dp1:"e",dp2:"m",dp3:"m",dp4:"m",dp5:"m",dp6:"m",dp7:"m",dp8:"m",dp9:"h",dp10:"m",dp11:"m",dp12:"m",dp13:"m",dp14:"m",dp15:"m",dp16:"m",
+  gd1:"m",gd2:"m",gd3:"m",gd4:"m",gd5:"m",gd6:"e",gd7:"m",gd8:"m",gd9:"m",gd10:"m",gd11:"m",gd12:"m",
+  bi1:"e",bi2:"e",bi3:"e",bi4:"e",bi5:"e",bi6:"e",bi7:"m",bi8:"m",bi9:"m",bi10:"m",bi11:"e",bi12:"m",
+  ti1:"m",ti2:"m",ti3:"h",ti4:"m",ti5:"m",ti6:"m",ti7:"h",ti8:"h",
+  uf1:"m",uf2:"m",uf3:"m",uf4:"h",uf5:"m",uf6:"m",uf7:"m",uf8:"h",
+  sw1:"m",sw2:"m",sw3:"m",sw4:"m",sw5:"m",sw6:"m",sw7:"m",sw8:"h"
+};
+const DIFF_LABEL = { e:"EASY", m:"MEDIUM", h:"HARD" };
+topics.forEach(t => t.problems.forEach(p => { problemIndex[p.id].diff = DIFF[p.id] || "m"; }));
+const DIFF_COUNTS = { e:0, m:0, h:0 };
+topics.forEach(t => t.problems.forEach(p => { DIFF_COUNTS[problemIndex[p.id].diff]++; }));
+
 /* ============ STATE ============ */
 
 const STORAGE_KEY = "dsa_practice_progress_v1";
@@ -696,14 +727,14 @@ function renderReviewBox(p){
 
 function buildProblemCard(p){
   const wrap = document.createElement("div");
-  wrap.className = "problem-card";
+  wrap.className = "problem-card prob-" + (problemIndex[p.id].diff || "m");
   const isSolved = !!progress.solved[p.id];
   const isOpen = expanded.has(p.id);
 
   const head = document.createElement("div");
   head.className = "problem-head";
   head.innerHTML = `
-    <span class="problem-title"><span class="solved-dot ${isSolved?"done":""}"></span>${p.title}</span>
+    <span class="problem-title"><span class="solved-dot ${isSolved?"done":""}"></span>${p.title}<span class="diff-badge ${problemIndex[p.id].diff}">${DIFF_LABEL[problemIndex[p.id].diff]}</span></span>
     <span class="problem-toggle">${isOpen ? "Hide ▲" : "Open ▼"}</span>
   `;
   head.addEventListener("click", () => {
