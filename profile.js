@@ -1,7 +1,6 @@
 /* DSA Hub — shared Profile module (name + optional photo + gender + password reset + logout) */
 (function () {
   var KEY = "dsa_profile_v1";
-  var ADMIN_EMAIL = "vinay9009patel@gmail.com";
   var user = { displayName: "", email: "", gender: "male", photo: "" };
   var loaded = false;
 
@@ -13,15 +12,6 @@
   }
   function currentUser() {
     try { return window.firebase && firebase.auth && firebase.auth().currentUser; } catch (e) { return null; }
-  }
-  function isAdminNow() {
-    try {
-      if (window.UsageTracker && typeof UsageTracker.isAdmin === "function") return UsageTracker.isAdmin();
-    } catch (e) { }
-    try {
-      var u = firebase.auth() && firebase.auth().currentUser;
-      return !!(u && u.email && u.email.toLowerCase() === ADMIN_EMAIL);
-    } catch (e) { return false; }
   }
   function loadScript(src, onload) {
     var s = document.createElement("script");
@@ -165,11 +155,7 @@
       ".dsa-btn-danger{background:transparent;color:#ff7b7b;border:1px solid #6a2a2a;}" +
       ".dsa-modal .dsa-msg{margin-top:14px;font-size:12.5px;line-height:1.5;display:none;padding:9px 12px;border-radius:8px;}" +
       ".dsa-msg.ok{display:block;background:#0e3220;border:1px solid #1f6b43;color:#9fe8c0;}" +
-      ".dsa-msg.err{display:block;background:#3a1515;border:1px solid #6a2a2a;color:#ffb3b3;}" +
-      ".dsa-admin{margin-top:20px;padding:16px;border:1px solid #5a3a22;background:#1a1711;border-radius:12px;}" +
-      ".dsa-admin-title{font-size:12px;font-weight:800;color:#ffb86b;text-transform:uppercase;letter-spacing:.8px;margin:0 0 4px;}" +
-      ".dsa-admin .dsa-msg{margin-top:10px;}" +
-      ".dsa-admin button{margin-top:6px;}";
+      ".dsa-msg.err{display:block;background:#3a1515;border:1px solid #6a2a2a;color:#ffb3b3;}";
     document.head.appendChild(s);
   }
 
@@ -197,17 +183,6 @@
       '<option value="female"' + (user.gender === "female" ? " selected" : "") + ">Female</option>" +
       '<option value="other"' + (user.gender === "other" ? " selected" : "") + ">Other</option>" +
       "</select>" +
-      '<div class="dsa-admin" id="dsaAdminWrap" style="display:none">' +
-      '<div class="dsa-admin-title">Admin — AI keys (Firebase)</div>' +
-      '<label for="dsaAdminOr">OpenRouter API key</label>' +
-      '<input type="password" id="dsaAdminOr" placeholder="sk-or-v1-...">' +
-      '<label for="dsaAdminGem">Gemini API key</label>' +
-      '<input type="password" id="dsaAdminGem" placeholder="AIza...">' +
-      '<label for="dsaAdminGemModel">Gemini model</label>' +
-      '<input type="text" id="dsaAdminGemModel" placeholder="gemini-2.5-flash" value="gemini-2.5-flash">' +
-      '<button class="dsa-btn dsa-btn-save" id="dsaAdminSave" type="button">Save keys to Firebase</button>' +
-      '<div class="dsa-msg" id="dsaAdminMsg"></div>' +
-      "</div>" +
       '<div class="dsa-note">Photo sirf account ke liye save hoti hai (Firestore users/{uid}), optional hai. Password change ke liye reset email aayega.</div>' +
       '<div class="dsa-msg" id="dsaMsg"></div>' +
       '<div class="dsa-btns">' +
@@ -271,46 +246,6 @@
         });
       } catch (e) { location.replace("login.html"); }
     });
-
-    var adminWrap = overlay.querySelector("#dsaAdminWrap");
-    function adminMsg(text, okFlag) {
-      var el = overlay.querySelector("#dsaAdminMsg");
-      el.textContent = text;
-      el.className = "dsa-msg " + (okFlag ? "ok" : "err");
-    }
-    if (isAdminNow()) {
-      adminWrap.style.display = "";
-      ensureStore(function () {
-        try {
-          firebase.firestore().collection("settings").doc("general").get().then(function (doc) {
-            if (!doc.exists) return;
-            var d = doc.data() || {};
-            if (d.openrouterApiKey) overlay.querySelector("#dsaAdminOr").value = d.openrouterApiKey;
-            if (d.geminiApiKey) overlay.querySelector("#dsaAdminGem").value = d.geminiApiKey;
-            if (d.geminiModel) overlay.querySelector("#dsaAdminGemModel").value = d.geminiModel;
-          }).catch(function () { });
-        } catch (e) { }
-      });
-      overlay.querySelector("#dsaAdminSave").addEventListener("click", function () {
-        var or = overlay.querySelector("#dsaAdminOr").value.trim();
-        var gm = overlay.querySelector("#dsaAdminGem").value.trim();
-        var gmM = overlay.querySelector("#dsaAdminGemModel").value.trim() || "gemini-2.5-flash";
-        function doSave() {
-          firebase.firestore().collection("settings").doc("general").set({
-            openrouterApiKey: or,
-            geminiApiKey: gm,
-            geminiModel: gmM
-          }, { merge: true }).then(function () {
-            adminMsg("Saved to Firebase — keys refresh ho rahe hain.", true);
-            setTimeout(function () { location.reload(); }, 700);
-          }).catch(function (err) {
-            adminMsg("Save fail: " + (err && err.message ? err.message : err), false);
-          });
-        }
-        if (window.firebase && firebase.firestore) doSave();
-        else ensureStore(doSave);
-      });
-    }
   }
 
   window.DSAProfile = {
