@@ -38,6 +38,7 @@
       return;
     }
     try {
+      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function () { });
       firebase.auth().onAuthStateChanged(function (user) {
         if (user) {
           removeOverlay();
