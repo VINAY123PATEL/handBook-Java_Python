@@ -12,6 +12,7 @@
 <script src="auth-gate.js"></script>
 <script src="usage.js"></script>
 <script src="profile.js"></script>
+<script src="gamify.js"></script>
 <style>
   :root{
     --bg:#0b0e13;
@@ -102,6 +103,15 @@
   .userbar button:hover{ background:#3a1515; }
   .userbar .avatar-wrap{ display:inline-flex; }
   .userbar .dsa-avatar-xl, .userbar .dsa-avatar{ width:28px; height:28px; font-size:13px; }
+  .gm-strip{margin:12px 0 20px;padding:14px 18px;border:1px solid #2a3a22;background:#0e1a16;border-radius:14px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:13px;color:#ffe3b3;font-weight:600;}
+  .gm-rank{font-size:15px;font-weight:800;white-space:nowrap;}
+  .gm-bar{width:130px;height:8px;border-radius:99px;background:#1a2a18;border:1px solid #2a3a22;overflow:hidden;}
+  .gm-fill{height:100%;border-radius:99px;background:#4ade80;transition:width .3s;}
+  .gm-xp{font-size:12px;color:#c9a84c;white-space:nowrap;}
+  .gm-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .gm-chip{background:#1a2418;border:1px solid #2a3a22;padding:4px 10px;border-radius:99px;font-size:12px;color:#ffe3b3;}
+  .gm-badges{display:flex;gap:6px;flex-wrap:wrap;}
+  .gm-badge{font-size:18px;filter:drop-shadow(0 0 4px #00000044);}
   .foot{
     margin-top:44px; color:var(--muted-2); font-family:'JetBrains Mono',monospace;
     font-size:12px; text-align:center; line-height:1.8;
@@ -145,6 +155,8 @@
   <div class="mark"><span class="j">JAVA</span> ⇄ <span class="p">PYTHON</span> ⇄ <span class="c">C++</span></div>
   <h1>DSA &amp; Placement Notes Hub</h1>
   <p class="lead">Java, Python aur C++ — teeno ek saath seekho: theory handbook aur 267 popular LeetCode questions ke solutions ke saath. Neeche saare subjects ke complete placement PDF notes bhi milenge.</p>
+
+  <div class="gm-strip" id="gmStrip">⏳…</div>
 
   <div class="grid">
     <a class="card" href="rosetta-dsa.html">
@@ -230,6 +242,7 @@
           return;
         }
         UsageTracker.increment('pdf', function () {
+          if (window.Gamify) window.Gamify.award('pdf', { text: "+1 XP — PDF kholae!" });
           if (win) win.location.href = a.href; else location.href = a.href;
         });
       });
@@ -288,7 +301,16 @@
     }
   });
 
-  window.addEventListener('auth:ready', initUserBar);
+  window.addEventListener('auth:ready', function () {
+    initUserBar();
+    setTimeout(function () {
+      if (window.Gamify) Gamify.award('visit');
+    }, 900);
+  });
+  window.addEventListener('gamify:update', function () {
+    var el = document.getElementById('gmStrip');
+    if (el && window.Gamify) el.innerHTML = Gamify.statsMarkup();
+  });
   if (window.firebase && window.firebase.auth) initUserBar();
 })();
 </script>

@@ -7,6 +7,7 @@
 <script src="auth-gate.js"></script>
 <script src="usage.js"></script>
 <script src="profile.js"></script>
+<script src="gamify.js"></script>
 <style>
   :root{
     --navy:#0B1E3A; --navy-2:#122B52; --steel:#3E5C86; --ink:#16233B;
@@ -133,6 +134,7 @@
   .account-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:16px;background:#101823;border:1px solid var(--line);border-radius:12px;flex-wrap:wrap;}
   .account-bar .dsa-avatar{width:30px;height:30px;font-size:14px;}
   .account-name{color:var(--steel);font-weight:700;font-size:13.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;}
+  .gm-chip{font-size:12px;color:#ffb86b;background:#1a2418;border:1px solid #3a4a2a;padding:5px 10px;border-radius:999px;font-family:var(--mono);font-weight:600;white-space:nowrap;}
   .account-spacer{flex:1;}
 </style>
 </head>
@@ -408,8 +410,6 @@ topics.forEach(t => t.problems.forEach(p => { problemIndex[p.id] = { ...p, topic
 
 const STORAGE_KEY = "dsa_practice_progress_v1";
 
-const ADMIN_EMAIL = "vinay9009patel@gmail.com";
-const ADMIN_NAME = "Vinay Patel";
 const SETTINGS_REF = "settings/general";
 
 let progress = {
@@ -524,14 +524,6 @@ function clearProgress(){
 
 /* ============ HELPERS ============ */
 
-function isAdminUser(){
-  try {
-    if (!window.firebase || !window.firebase.auth) return false;
-    const u = firebase.auth().currentUser;
-    return !!(u && u.email && u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
-  } catch (e) { return false; }
-}
-
 function updateKeyStatus(){
   const el = document.getElementById("keyStatus");
   if(!el) return;
@@ -556,82 +548,6 @@ function updateUsageStatus(){
     el.style.color = "#0E8F7A";
   });
 }
-
-function renderAdminPanel(){
-  if(!isAdminUser()) return "";
-  return `<div class="admin-panel">
-    <div class="admin-head">
-      <span class="admin-title">Admin Settings — ${ADMIN_NAME}</span>
-      <button class="btn-ghost" id="adminCollapseBtn" type="button">Collapse</button>
-    </div>
-    <div class="admin-body" id="adminBody">
-      <div class="admin-grid">
-        <div>
-          <label class="field-label">OpenRouter API key</label>
-          <input type="password" id="adminOpenRouter" value="${escapeHtml(apiKey)}">
-        </div>
-        <div>
-          <label class="field-label">Gemini API key</label>
-          <input type="password" id="adminGemini" value="${escapeHtml(geminiApiKey)}">
-        </div>
-        <div>
-          <label class="field-label">Gemini model</label>
-          <input type="text" id="adminGeminiModel" value="${escapeHtml(geminiModel)}">
-        </div>
-      </div>
-      <div class="admin-actions">
-        <button class="btn-primary" id="adminSaveBtn" type="button">Save keys to Firebase</button>
-        <span class="hint" id="adminSaveMsg"></span>
-      </div>
-    </div>
-  </div>`;
-}
-
-function wireAdminPanel(){
-  if(!isAdminUser()) return;
-  const coll = document.getElementById("adminCollapseBtn");
-  const body = document.getElementById("adminBody");
-  if(coll && body){
-    coll.addEventListener("click", () => {
-      const hidden = body.style.display === "none";
-      body.style.display = hidden ? "" : "none";
-      coll.textContent = hidden ? "Collapse" : "Expand";
-    });
-  }
-  const saveBtn = document.getElementById("adminSaveBtn");
-  if(saveBtn) saveBtn.addEventListener("click", saveAdminSettings);
-}
-
-function saveAdminSettings(){
-  const msgEl = document.getElementById("adminSaveMsg");
-  const orKey = (document.getElementById("adminOpenRouter").value || "").trim();
-  const gmKey = (document.getElementById("adminGemini").value || "").trim();
-  const gmModel = (document.getElementById("adminGeminiModel").value || "").trim() || "gemini-2.0-flash";
-
-  function doSave(){
-    firebase.firestore().collection("settings").doc("general").set({
-      openrouterApiKey: orKey,
-      geminiApiKey: gmKey,
-      geminiModel: gmModel
-    }, { merge: true }).then(() => {
-      apiKey = orKey;
-      geminiApiKey = gmKey;
-      geminiModel = gmModel;
-      try { sessionStorage.setItem("dsa_openrouter_key", apiKey); } catch (e) { }
-      updateKeyStatus();
-      msgEl.textContent = "Saved to Firebase ✓ — ab sab users ke liye auto-load hogi.";
-      msgEl.style.color = "#0E8F7A";
-    }).catch(err => {
-      msgEl.textContent = "Save fail: " + (err && err.message ? err.message : err);
-      msgEl.style.color = "#B23A3A";
-    });
-  }
-
-  if (window.firebase && window.firebase.firestore) { doSave(); return; }
-  loadFirestoreCompat(doSave);
-}
-
-/* ============ HELPERS (existing) ============ */
 
 function escapeHtml(str){
   return String(str).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -679,6 +595,7 @@ function renderMain(){
     <div class="account-bar">
       <div class="account-user" data-dsa-avatar></div>
       <span class="account-name" data-dsa-name>Account</span>
+      <span class="gm-chip" id="gmChip" title="XP & streak — earn more by solving">⏳…</span>
       <span class="account-spacer"></span>
       <button class="btn-ghost" id="profileBtn" type="button">PROFILE</button>
       <button class="btn-danger-ghost" id="logoutBtn" type="button">LOG OUT</button>
@@ -720,8 +637,6 @@ function renderMain(){
       <div class="hint">Step 1: describe your approach in a problem's chat box → AI generates code. Step 2: paste/refine your final code. Step 3: click "Mark as solved" → the AI reviews your logic, finds every mistake, checks edge cases and complexity, and shows you exactly what to fix. Sab models free hain — AI keys Firebase (Firestore settings/general) se auto-load hoti hain. Gemini Fail ho to OpenRouter, OpenRouter fail ho to Gemini — automatic backup chalta hai.</div>
     </div>
 
-    ${renderAdminPanel()}
-
     ${resumeBanner}
 
     <h1 class="page-title">${topic.name}</h1>
@@ -737,7 +652,6 @@ function renderMain(){
 
   updateKeyStatus();
   updateUsageStatus();
-  wireAdminPanel();
 
   const profileBtn = document.getElementById("profileBtn");
   if(profileBtn) profileBtn.addEventListener("click", () => { if(window.DSAProfile) window.DSAProfile.showModal(); });
@@ -953,6 +867,7 @@ async function runReview(p, markSolved){
   }finally{
     reviewLoading.delete(p.id);
     if(markSolved) progress.solved[p.id] = true;
+    if(markSolved && window.Gamify) window.Gamify.award('solve', { text: "Problem solved! +10 XP" });
     saveProgress();
     renderAll();
   }
@@ -1122,7 +1037,21 @@ function loadKeyFromFirebase(){
 
 window.addEventListener('auth:ready', function () { setTimeout(function(){ updateUsageStatus(); }, 400); });
 
+function refreshGmChip(){
+  const el = document.getElementById("gmChip");
+  if(!el || !window.Gamify) return;
+  const d = window.Gamify.data();
+  const info = window.Gamify.levelInfo(d.xp);
+  el.textContent = info.icon + " Lv" + info.levelIndex + " · " + d.xp + " XP · 🔥" + d.streak;
+  el.title = "Level " + info.levelIndex + " " + info.title + " · " + d.xp + " XP · " + d.streak + " day streak";
+}
+window.addEventListener("gamify:update", refreshGmChip);
+window.addEventListener("gamify:toast", function (e) {
+  if (window.Gamify && e && e.detail && e.detail.text) window.Gamify.showToast(e.detail.text);
+});
+
 loadKeyFromFirebase();
+setTimeout(refreshGmChip, 1200);
 </script>
 </body>
 </html>

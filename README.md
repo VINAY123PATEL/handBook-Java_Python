@@ -5,8 +5,9 @@ Java ⇄ Python ⇄ C++ — DSA Learning Hub with Firebase login (email/password
 - `index.html` — launcher + PDF notes library (Placement Notes)
 - `login.html` — Firebase login/register/signout gate (email + password). Register mein: naam, gender (male/female/other), strong password (8+ chars, upper+lower+number+special).
 - `auth-gate.js` + `firebase-config.js` — gate scripts jo har page ko login ke baad hi kholte hain
-- `profile.js` — shared Profile modal (naam edit, optional profile photo, gender, password reset email, logout). Profile data Firestore `users/{uid}` + Firebase account mein save hoti hai
+- `profile.js` — shared Profile modal (naam edit, optional profile photo, gender, password reset email, logout) + **admin AI-keys section** (sirf admin ke liye: OpenRouter/Gemini keys, default Gemini model). Profile data Firestore `users/{uid}` + Firebase account mein save hoti hai
 - `usage.js` — daily usage limits (Firestore per-user tracking)
+- `gamify.js` — gamification: XP, levels, daily streak, badges (leaderboard Firestore `leaderboard/{uid}`)
 - `rosetta-dsa.html` — DSA Handbook (theory + code + quizzes, 20 chapters)
 - `leetcode-200.html` — LeetCode Top 267 (topic-wise chapters, Java + Python + C++ solutions)
 - `codingPrac.html` — DSA Practice Console (204 problems, AI code-gen + AI review via OpenRouter/Gemini, progress cross-device sync via Firestore)
@@ -21,7 +22,13 @@ Service worker (`service-worker.js`) precaches the app shell + subject PDFs for 
 ### Daily limits (`usage.js`, Firestore `usage/{uid}` doc)
 - PDFs: 2/day · Questions (Rosetta/LeetCode/DSA-Hub): 10/day · CodingPrac "Mark as solved": 5/day
 - Admin (`vinay9009patel@gmail.com`) — unlimited
-- Limits are configurable from Firestore `settings/general`: `dailyPdfLimit`, `dailyQuestionLimit`, `dailyCodingLimit` (admin can also edit via CodingPrac → Admin Settings panel)
+- Limits are configurable from Firestore `settings/general`: `dailyPdfLimit`, `dailyQuestionLimit`, `dailyCodingLimit` (admin Profile modal → Admin keys save karta hai)
+
+### Gamification (`gamify.js`)
+- XP kamane ka tarika: Quiz ka sahi jawab = +5 XP · CodingPrac "Mark as solved" = +10 XP · PDF kholna = +1 XP · daily login = +2 XP (ek baar roz)
+- Levels: Rookie → Learner → Explorer → Ace → Guru → DSA Master
+- Badges: first-solve, 5/25/50/100 solved, 10 quizzes, 20 PDFs, 3/7/30-day streak
+- Data Firestore `users/{uid}.gamify` + `leaderboard/{uid}` (name/photo/xp/streak/bestStreak)
 
 ### Firestore rules (Settings → Firestore → Rules → paste & Publish)
 ```
@@ -40,6 +47,10 @@ service cloud.firestore {
     }
     match /users/{userId} {
       allow read, write: if request.auth.uid == userId;
+    }
+    match /leaderboard/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
     }
   }
 }

@@ -11,6 +11,7 @@
 <script src="firebase-config.js"></script>
 <script src="auth-gate.js"></script>
 <script src="usage.js"></script>
+<script src="gamify.js"></script>
 <style>
   :root{
     --bg:#0b0e13;
@@ -693,6 +694,7 @@ function bindQuiz(){
             box.dataset.done = '1';
             score++;
             scoreVal.textContent = score;
+            if(window.Gamify) window.Gamify.award('quiz', { text: "Sahi jawab! +5 XP" });
           }
         } else {
           btn.classList.add('wrong');
