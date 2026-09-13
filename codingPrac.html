@@ -795,6 +795,45 @@ document.getElementById("retakeAllBtn").addEventListener("click", () => {
   progressLoaded = true;
   renderAll();
 })();
+
+/* ============ FIREBASE: OPENROUTER KEY FROM FIRESTORE (optional) ============ */
+
+function loadFirestoreCompat(cb){
+  if (window.firebase && window.firebase.firestore) { cb(); return; }
+  var s = document.createElement("script");
+  s.src = "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js";
+  s.onload = cb;
+  s.onerror = function(){ console.warn("Firestore SDK load nahi hua — key Firebase se nahi aayi."); };
+  document.head.appendChild(s);
+}
+
+function loadKeyFromFirebase(){
+  try {
+    if (!window.firebase || !window.firebase.auth) return;
+    firebase.auth().onAuthStateChanged(function (user) {
+      if (!user) return;
+      loadFirestoreCompat(function () {
+        try {
+          var db = firebase.firestore();
+          db.collection("settings").doc("general").get().then(function (doc) {
+            if (!doc.exists) return;
+            var key = (doc.data().openrouterApiKey || "").trim();
+            if (!key) return;
+            var typed = (sessionStorage.getItem("dsa_openrouter_key") || "").trim();
+            if (!typed) {
+              apiKey = key;
+              try { sessionStorage.setItem("dsa_openrouter_key", apiKey); } catch (e) { }
+              var input = document.getElementById("apiKeyInput");
+              if (input) input.value = apiKey;
+            }
+          }).catch(function (e) { console.warn("Firestore read failed:", e); });
+        } catch (e) { console.warn(e); }
+      });
+    });
+  } catch (e) { console.warn(e); }
+}
+
+loadKeyFromFirebase();
 </script>
 </body>
 </html>
