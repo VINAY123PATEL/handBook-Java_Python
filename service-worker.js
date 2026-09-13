@@ -1,4 +1,4 @@
-var CACHE = 'dsa-hub-v13';
+var CACHE = 'dsa-hub-v14';
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
@@ -11,6 +11,7 @@ self.addEventListener('install', function (event) {
         './rosetta-dsa.html',
         './leetcode-200.html',
         './firebase-config.js',
+        './usage.js',
         './icon-192.png',
         './icon-512.png',
         './pdfs/DSA_Complete_Notes.pdf',

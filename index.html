@@ -10,6 +10,7 @@
 <link rel="icon" href="icon-192.png">
 <script src="firebase-config.js"></script>
 <script src="auth-gate.js"></script>
+<script src="usage.js"></script>
 <style>
   :root{
     --bg:#0b0e13;
@@ -214,9 +215,34 @@
     h += '<p class="pdesc">' + p.d + '</p>';
     h += '<span class="pgo">KHOLO PDF →</span>';
     a.innerHTML = h;
+    a.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      var win = window.open('', '_blank');
+      UsageTracker.canUse('pdf', function (ok) {
+        if (!ok) {
+          if (win) win.close();
+          alert('Aaj ka PDF quota khatam — daily limit sirf ' + UsageTracker.getLimits().pdf + ' PDFs. Kal phir dekhna.');
+          return;
+        }
+        UsageTracker.increment('pdf', function () {
+          if (win) win.location.href = a.href; else location.href = a.href;
+        });
+      });
+    });
     grid.appendChild(a);
   });
-  document.getElementById('pdfCount').textContent = pdfs.length + ' PDFs available';
+  function refreshPdfCount() {
+    var el = document.getElementById('pdfCount');
+    if (!el) return;
+    if (UsageTracker.isAdmin()) { el.textContent = pdfs.length + ' PDFs available · Aap admin ho — unlimited'; return; }
+    UsageTracker.load(function () {
+      if (!el) return;
+      var left = UsageTracker.getRemaining('pdf');
+      el.textContent = pdfs.length + ' PDFs available · Aaj ' + left + ' baaki';
+    });
+  }
+  refreshPdfCount();
+  window.addEventListener('auth:ready', function () { setTimeout(refreshPdfCount, 400); });
 })();
 </script>
 <script>

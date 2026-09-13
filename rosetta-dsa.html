@@ -10,6 +10,7 @@
 <link rel="icon" href="icon-192.png">
 <script src="firebase-config.js"></script>
 <script src="auth-gate.js"></script>
+<script src="usage.js"></script>
 <style>
   :root{
     --bg:#0b0e13;
@@ -734,6 +735,19 @@ document.querySelector('.brand').addEventListener('click', ()=> goTo(0));
 buildDrawer();
 buildDotsMini();
 render();
+
+/* Daily question-limit gate */
+(function guardQuestions(){
+  if (UsageTracker.isAdmin()) return;
+  UsageTracker.canUse('questions', function (ok) {
+    if (!ok) {
+      alert('Aaj ka questions quota khatam — daily limit ' + UsageTracker.getLimits().questions + ' questions. Kal phir aana.');
+      location.replace('index.html');
+      return;
+    }
+    UsageTracker.increment('questions');
+  });
+})();
 </script>
 <script>
 if ('serviceWorker' in navigator) {

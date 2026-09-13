@@ -10,6 +10,7 @@
 <link rel="icon" href="icon-192.png">
 <script src="firebase-config.js"></script>
 <script src="auth-gate.js"></script>
+<script src="usage.js"></script>
 <style>
 
   :root{
@@ -165,6 +166,23 @@
       window.scrollTo(0, 0);
       return;
     }
+    if (name === 'rosetta' || name === 'leetcode') {
+      if (!UsageTracker.isAdmin()) {
+        UsageTracker.canUse('questions', function (ok) {
+          if (!ok) {
+            alert('Aaj ka questions quota khatam — daily limit ' + UsageTracker.getLimits().questions + '. Kal phir aana.');
+            return;
+          }
+          UsageTracker.increment('questions');
+          openPage.inner(name);
+        });
+        return;
+      }
+    }
+    openPage.inner(name);
+  };
+
+  window.openPage.inner = function(name){
     var frameId = name === 'rosetta' ? 'frame-rosetta' : 'frame-leetcode';
     var frame = document.getElementById(frameId);
     if (!loaded[name]) {

@@ -5,6 +5,7 @@
 <title>DSA Practice Console — Arrays to Advanced</title>
 <script src="firebase-config.js"></script>
 <script src="auth-gate.js"></script>
+<script src="usage.js"></script>
 <style>
   :root{
     --navy:#0B1E3A; --navy-2:#122B52; --steel:#3E5C86; --ink:#16233B;
@@ -57,6 +58,17 @@
   textarea{font-family:var(--mono);font-size:13px;resize:vertical;}
   input:focus, select:focus, textarea:focus{outline:none;border-color:var(--accent);}
   .hint{font-size:12px;color:#8B96A8;margin-top:5px;line-height:1.5;}
+  .key-status{font-size:12px;color:#8B96A8;margin-top:8px;font-family:var(--mono);}
+  .key-status.ok{color:#0E8F7A;}
+  .key-status .sep{color:#8B96A8;margin:0 6px;}
+  .admin-panel{margin-bottom:20px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .admin-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;background:var(--navy);color:#fff;font-size:13.3px;flex-wrap:wrap;}
+  .admin-title{font-weight:700;font-family:var(--mono);letter-spacing:.5px;}
+  .admin-body{padding:16px;background:#FBFCFE;}
+  .admin-grid{display:flex;gap:12px;flex-wrap:wrap;}
+  .admin-grid > div{flex:1;min-width:200px;}
+  .admin-actions{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;}
+  .admin-actions .hint{margin:0;}
   .banner{
     background:#EDF7F4;border:1px solid #BFE6DA;color:#0E5B4C;font-size:13px;
     padding:12px 14px;border-radius:8px;margin-bottom:18px;line-height:1.55;
@@ -391,6 +403,10 @@ topics.forEach(t => t.problems.forEach(p => { problemIndex[p.id] = { ...p, topic
 
 const STORAGE_KEY = "dsa_practice_progress_v1";
 
+const ADMIN_EMAIL = "vinay9009patel@gmail.com";
+const ADMIN_NAME = "Vinay Patel";
+const SETTINGS_REF = "settings/general";
+
 let progress = {
   solved: {},
   code: {},
@@ -435,6 +451,114 @@ function clearProgress(){
 }
 
 /* ============ HELPERS ============ */
+
+function isAdminUser(){
+  try {
+    if (!window.firebase || !window.firebase.auth) return false;
+    const u = firebase.auth().currentUser;
+    return !!(u && u.email && u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+  } catch (e) { return false; }
+}
+
+function updateKeyStatus(){
+  const el = document.getElementById("keyStatus");
+  if(!el) return;
+  const parts = [];
+  if (apiKey) parts.push("OpenRouter ✓");
+  if (geminiApiKey) parts.push("Gemini ✓ (" + geminiModel + ")");
+  if (!parts.length) parts.push("Koi API key nahi — Admin Settings se daalo ya firebase-config se");
+  el.className = "key-status" + (parts.length ? " ok" : "");
+  el.innerHTML = parts.join('<span class="sep">·</span>');
+}
+
+function updateUsageStatus(){
+  const el = document.getElementById("usageStatus");
+  if(!el) return;
+  if (UsageTracker.isAdmin()) { el.textContent = "Daily limits: aap admin ho — unlimited ✓"; el.style.color = "#0E8F7A"; return; }
+  UsageTracker.load(function () {
+    if(!el) return;
+    el.textContent = "Aaj: " + UsageTracker.getRemaining('coding') + "/" + UsageTracker.getLimits().coding + " coding problems baaki · " +
+      UsageTracker.getRemaining('questions') + "/" + UsageTracker.getLimits().questions + " questions baaki · " +
+      UsageTracker.getRemaining('pdf') + "/" + UsageTracker.getLimits().pdf + " PDFs baaki";
+    el.style.color = "#0E8F7A";
+  });
+}
+
+function renderAdminPanel(){
+  if(!isAdminUser()) return "";
+  return `<div class="admin-panel">
+    <div class="admin-head">
+      <span class="admin-title">Admin Settings — ${ADMIN_NAME}</span>
+      <button class="btn-ghost" id="adminCollapseBtn" type="button">Collapse</button>
+    </div>
+    <div class="admin-body" id="adminBody">
+      <div class="admin-grid">
+        <div>
+          <label class="field-label">OpenRouter API key</label>
+          <input type="password" id="adminOpenRouter" value="${escapeHtml(apiKey)}">
+        </div>
+        <div>
+          <label class="field-label">Gemini API key</label>
+          <input type="password" id="adminGemini" value="${escapeHtml(geminiApiKey)}">
+        </div>
+        <div>
+          <label class="field-label">Gemini model</label>
+          <input type="text" id="adminGeminiModel" value="${escapeHtml(geminiModel)}">
+        </div>
+      </div>
+      <div class="admin-actions">
+        <button class="btn-primary" id="adminSaveBtn" type="button">Save keys to Firebase</button>
+        <span class="hint" id="adminSaveMsg"></span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function wireAdminPanel(){
+  if(!isAdminUser()) return;
+  const coll = document.getElementById("adminCollapseBtn");
+  const body = document.getElementById("adminBody");
+  if(coll && body){
+    coll.addEventListener("click", () => {
+      const hidden = body.style.display === "none";
+      body.style.display = hidden ? "" : "none";
+      coll.textContent = hidden ? "Collapse" : "Expand";
+    });
+  }
+  const saveBtn = document.getElementById("adminSaveBtn");
+  if(saveBtn) saveBtn.addEventListener("click", saveAdminSettings);
+}
+
+function saveAdminSettings(){
+  const msgEl = document.getElementById("adminSaveMsg");
+  const orKey = (document.getElementById("adminOpenRouter").value || "").trim();
+  const gmKey = (document.getElementById("adminGemini").value || "").trim();
+  const gmModel = (document.getElementById("adminGeminiModel").value || "").trim() || "gemini-2.0-flash";
+
+  function doSave(){
+    firebase.firestore().collection("settings").doc("general").set({
+      openrouterApiKey: orKey,
+      geminiApiKey: gmKey,
+      geminiModel: gmModel
+    }, { merge: true }).then(() => {
+      apiKey = orKey;
+      geminiApiKey = gmKey;
+      geminiModel = gmModel;
+      try { sessionStorage.setItem("dsa_openrouter_key", apiKey); } catch (e) { }
+      updateKeyStatus();
+      msgEl.textContent = "Saved to Firebase ✓ — ab sab users ke liye auto-load hogi.";
+      msgEl.style.color = "#0E8F7A";
+    }).catch(err => {
+      msgEl.textContent = "Save fail: " + (err && err.message ? err.message : err);
+      msgEl.style.color = "#B23A3A";
+    });
+  }
+
+  if (window.firebase && window.firebase.firestore) { doSave(); return; }
+  loadFirestoreCompat(doSave);
+}
+
+/* ============ HELPERS (existing) ============ */
 
 function escapeHtml(str){
   return String(str).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
@@ -482,7 +606,7 @@ function renderMain(){
     <div class="top-controls">
       <div class="row">
         <div>
-          <label class="field-label">OpenRouter API key (pre-filled, session only)</label>
+          <label class="field-label">OpenRouter API key (optional — Gemini bhi hai)</label>
           <input type="password" id="apiKeyInput" placeholder="sk-or-v1-..." value="${apiKey}">
         </div>
         <div>
@@ -505,8 +629,12 @@ function renderMain(){
           </select>
         </div>
       </div>
-      <div class="hint">Step 1: describe your approach in a problem's chat box → AI generates code. Step 2: paste/refine your final code. Step 3: click "Mark as solved" → the AI reviews your logic, finds every mistake, checks edge cases and complexity, and shows you exactly what to fix. Progress persists in this browser; your key is never stored in localStorage. OpenRouter fail ho to Gemini automatic fallback ho jati hai.</div>
+      <div class="key-status" id="keyStatus"></div>
+      <div class="key-status" id="usageStatus"></div>
+      <div class="hint">Step 1: describe your approach in a problem's chat box → AI generates code. Step 2: paste/refine your final code. Step 3: click "Mark as solved" → the AI reviews your logic, finds every mistake, checks edge cases and complexity, and shows you exactly what to fix. Progress persists in this browser; your key is never stored in localStorage. OpenRouter fail ho to Gemini automatic fallback ho jati hai — keys Firebase (Firestore settings/general) se auto-load hoti hain.</div>
     </div>
+
+    ${renderAdminPanel()}
 
     ${resumeBanner}
 
@@ -521,6 +649,10 @@ function renderMain(){
   document.getElementById("modelSelect").addEventListener("change", e => { progress.model = e.target.value; saveProgress(); });
   document.getElementById("langSelect").value = progress.language;
   document.getElementById("langSelect").addEventListener("change", e => { progress.language = e.target.value; saveProgress(); });
+
+  updateKeyStatus();
+  updateUsageStatus();
+  wireAdminPanel();
 
   const dismissBtn = document.getElementById("dismissResumeBtn");
   if(dismissBtn) dismissBtn.addEventListener("click", () => { resumeBannerDismissed = true; renderMain(); });
@@ -654,8 +786,8 @@ async function sendApproach(p){
   const promptEl = document.getElementById(`prompt-${p.id}`);
   const text = promptEl.value.trim();
   if(!text) return;
-  if(!apiKey){
-    alert("Enter your OpenRouter API key at the top of the page first.");
+  if(!apiKey && !geminiApiKey){
+    alert("Koi AI key nahi mili — Admin Settings se OpenRouter/Gemini key daalo ya top wale field mein apni key paste karo.");
     return;
   }
 
@@ -699,6 +831,15 @@ The candidate will describe their approach in plain words. Your ONLY job is to t
 /* ============ AI: THOROUGH CODE REVIEW ON "MARK AS SOLVED" ============ */
 
 async function runReview(p, markSolved){
+  if(markSolved){
+    const ok = await new Promise(res => UsageTracker.canUse('coding', res));
+    if(!ok){
+      alert('Aaj ka coding quota khatam — daily limit ' + UsageTracker.getLimits().coding + ' problems (Mark as solved). Kal phir karo.');
+      return;
+    }
+    UsageTracker.increment('coding');
+    updateUsageStatus();
+  }
   const code = progress.code[p.id] || "";
   if(!code.trim()){
     alert("Paste your final code in the 'Your final code' box first — the AI needs your code to review it.");
@@ -719,7 +860,7 @@ async function runReview(p, markSolved){
 }
 
 async function reviewCode(p, code){
-  if(!apiKey){ throw new Error("OpenRouter API key missing — enter it at the top of the page."); }
+  if(!apiKey && !geminiApiKey){ throw new Error("Koi AI key nahi mili — Admin Settings mein OpenRouter/Gemini key daalo."); }
   const lang = progress.language;
   const problem = problemIndex[p.id];
   const approach = (progress.chats[p.id] || []).filter(m=>m.role==="user").map(m=>m.content).join(" || ");
@@ -755,6 +896,7 @@ Be specific, reference the candidate's actual code, and do not invent problems t
 /* ============ API CALL ============ */
 
 async function callOpenRouter(key, model, messages, maxTokens){
+  if (!key) return await callGemini(messages, maxTokens);
   var reply = "";
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -879,6 +1021,8 @@ function loadKeyFromFirebase(){
     });
   } catch (e) { console.warn(e); }
 }
+
+window.addEventListener('auth:ready', function () { setTimeout(function(){ updateUsageStatus(); }, 400); });
 
 loadKeyFromFirebase();
 </script>
