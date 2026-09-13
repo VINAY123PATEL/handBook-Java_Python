@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login · handBook — Java ⇄ Python</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root{
+    --bg:#0b0e13;
+    --panel:#12161d;
+    --panel-2:#0f1319;
+    --line:#232935;
+    --text:#e7ecf3;
+    --muted:#8a93a3;
+    --muted-2:#5b6472;
+    --java:#ef8b28;
+    --java-dim:#3a2a17;
+    --py-blue:#4b8bd4;
+    --py-yellow:#f2c94c;
+    --py-dim:#17263a;
+    --green:#2ecc71;
+    --red:#e74c3c;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(239,139,40,0.08), transparent 60%),
+      radial-gradient(1200px 700px at 100% 10%, rgba(75,139,212,0.09), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Space Grotesk', sans-serif;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:32px 20px;
+  }
+  .mark{
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:16px;
+    padding:10px 18px; border-radius:10px;
+    background:linear-gradient(135deg, var(--java-dim), var(--py-dim));
+    border:1px solid var(--line); letter-spacing:1px; margin-bottom:26px;
+  }
+  .mark .j{color:var(--java);} .mark .p{color:var(--py-yellow);} .mark .c{color:var(--py-blue);}
+  .card{
+    width:100%; max-width:400px;
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:30px 28px;
+  }
+  .card h1{ font-size:24px; margin:0 0 6px; font-weight:700; text-align:center; }
+  .card .sub{ color:var(--muted); font-size:13.5px; text-align:center; margin:0 0 24px; line-height:1.55; }
+  .tabs{ display:flex; gap:6px; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:4px; margin-bottom:22px; }
+  .tab{
+    flex:1; text-align:center; padding:9px 0; border-radius:8px; cursor:pointer;
+    font-size:13.5px; font-weight:600; color:var(--muted); font-family:'JetBrains Mono',monospace; letter-spacing:.5px;
+  }
+  .tab.active{ background:linear-gradient(135deg, var(--java-dim), var(--py-dim)); color:var(--text); border:1px solid var(--line); }
+  label{ display:block; font-size:12.8px; font-weight:600; color:var(--muted); margin:0 0 6px; }
+  input{
+    width:100%; padding:11px 13px; margin-bottom:16px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:10px;
+    color:var(--text); font-family:'JetBrains Mono',monospace; font-size:14px;
+  }
+  input:focus{ outline:none; border-color:var(--java); }
+  .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:2px 0 18px; }
+  a.link{ color:var(--py-blue); font-size:12.8px; text-decoration:none; cursor:pointer; font-weight:600; }
+  a.link:hover{ text-decoration:underline; }
+  .btn{
+    width:100%; padding:13px; border:none; border-radius:10px; cursor:pointer;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; letter-spacing:.5px;
+    background:linear-gradient(135deg, var(--java), #e07010); color:#fff;
+  }
+  .btn:disabled{ opacity:.55; cursor:not-allowed; }
+  .msg{ font-size:12.8px; line-height:1.5; padding:10px 12px; border-radius:8px; margin-top:14px; display:none; }
+  .msg.err{ display:block; background:#3a1515; border:1px solid #6a2a2a; color:#ffb3b3; }
+  .msg.ok{ display:block; background:#0e3220; border:1px solid #1f6b43; color:#9fe8c0; }
+  .hint-note{
+    margin-top:18px; padding:12px 14px; border-radius:10px;
+    background:var(--java-dim); border:1px solid rgba(239,139,40,.35);
+    color:var(--py-yellow); font-size:12.8px; line-height:1.65; display:none;
+  }
+  .foot{
+    margin-top:22px; color:var(--muted-2); font-family:'JetBrains Mono',monospace;
+    font-size:11.5px; text-align:center; line-height:1.8;
+  }
+</style>
+</head>
+<body>
+
+  <div class="mark"><span class="j">JAVA</span> ⇄ <span class="p">PYTHON</span> ⇄ <span class="c">C++</span></div>
+
+  <div class="card">
+    <h1 id="cardTitle">Login</h1>
+    <p class="sub" id="cardSub">Apne account se sign in karke DSA &amp; Placement Hub kholo.</p>
+
+    <div class="tabs">
+      <div class="tab active" data-mode="login">LOGIN</div>
+      <div class="tab" data-mode="register">REGISTER</div>
+    </div>
+
+    <form id="authForm" novalidate>
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+
+      <div class="row" id="confirmRow" style="display:none;">
+        <label for="password2" style="margin:0;">Confirm password</label>
+        <input type="password" id="password2" placeholder="••••••••" autocomplete="new-password" style="margin:0;">
+      </div>
+
+      <div class="row" id="forgotRow">
+        <span></span>
+        <a class="link" id="forgotLink">Forgot password?</a>
+      </div>
+
+      <button class="btn" id="submitBtn" type="submit">LOGIN →</button>
+
+      <div class="msg" id="msg"></div>
+    </form>
+
+    <div class="hint-note" id="configNote"></div>
+  </div>
+
+  <div class="foot">Java ⇄ Python ⇄ C++ · DSA &amp; Placement Notes Hub<br>Login karke aage badho</div>
+
+<script src="firebase-config.js"></script>
+<script>
+(function () {
+  var cfg = window.FIREBASE_CONFIG || {};
+  var apiKey = (cfg.apiKey || "").trim();
+  var projectId = (cfg.projectId || "").trim();
+  var configured = !!(apiKey && projectId);
+
+  var mode = "login";
+  var tabs = document.querySelectorAll(".tab");
+  var emailEl = document.getElementById("email");
+  var passEl = document.getElementById("password");
+  var pass2El = document.getElementById("password2");
+  var confirmRow = document.getElementById("confirmRow");
+  var forgotRow = document.getElementById("forgotRow");
+  var submitBtn = document.getElementById("submitBtn");
+  var msgEl = document.getElementById("msg");
+  var form = document.getElementById("authForm");
+  var cardTitle = document.getElementById("cardTitle");
+  var cardSub = document.getElementById("cardSub");
+
+  function showMsg(text, okFlag) {
+    msgEl.textContent = text;
+    msgEl.className = "msg " + (okFlag ? "ok" : "err");
+    msgEl.style.display = "block";
+  }
+
+  function clearMsg() {
+    msgEl.style.display = "none";
+    msgEl.className = "msg";
+  }
+
+  function setMode(m) {
+    mode = m;
+    tabs.forEach(function (t) {
+      t.classList.toggle("active", t.getAttribute("data-mode") === m);
+    });
+    if (m === "register") {
+      cardTitle.textContent = "Register";
+      cardSub.textContent = "Naya account banao — email aur password bharo.";
+      confirmRow.style.display = "";
+      passEl.setAttribute("autocomplete", "new-password");
+      submitBtn.textContent = "CREATE ACCOUNT →";
+    } else {
+      cardTitle.textContent = "Login";
+      cardSub.textContent = "Apne account se sign in karke DSA & Placement Hub kholo.";
+      confirmRow.style.display = "none";
+      passEl.setAttribute("autocomplete", "current-password");
+      submitBtn.textContent = "LOGIN →";
+    }
+    clearMsg();
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () {
+      setMode(t.getAttribute("data-mode"));
+    });
+  });
+
+  function friendlyError(err) {
+    var code = err && err.code ? err.code : "";
+    var map = {
+      "auth/invalid-email": "Invalid email — email sahi format mein likho.",
+      "auth/user-not-found": "Koi account nahi mila is email se. Pehle Register karo.",
+      "auth/wrong-password": "Galat password. Dobara try karo (ya Forgot password).",
+      "auth/email-already-in-use": "Ye email pehle se registered hai — Login karo.",
+      "auth/weak-password": "Password bahut chhota hai — kam se kam 6 characters rakho.",
+      "auth/missing-password": "Password daalo.",
+      "auth/invalid-credential": "Galat email ya password.",
+      "auth/too-many-requests": "Bahut saari koshishen — thodi der baad try karo.",
+      "auth/network-request-failed": "Network problem — internet check karo."
+    };
+    return map[code] || (err && err.message ? err.message : "Kuch galat hua, dobara try karo.");
+  }
+
+  function redirectAfterAuth() {
+    var params = new URLSearchParams(location.search);
+    var redirect = params.get("redirect");
+    if (redirect && redirect.indexOf(".html") !== -1) {
+      location.replace(redirect);
+    } else {
+      location.replace("index.html");
+    }
+  }
+
+  if (!configured) {
+    setMode("login");
+    submitBtn.disabled = true;
+    document.getElementById("configNote").style.display = "block";
+    document.getElementById("configNote").innerHTML =
+      "<b>Firebase setup pehle karo.</b> Yeh steps follow karo:<br><br>" +
+      "1) Firebase Console (console.firebase.google.com) kholo → <b>Add project</b> → project ka naam do (jaise handbook-notes) → project banao.<br><br>" +
+      "2) Project ke andar jaao → left menu mein <b>Authentication</b> → <b>Get started</b> → <b>Sign-in method</b> tab → <b>Email/Password</b> enable karo (Password, na ki link) → Save.<br><br>" +
+      "3) Left sidebar mein ⚙️ <b>Project settings (gear icon)</b> → <b>General</b> tab → niche <b>Your apps</b> → <b>Web app</b> (</> icon) → app nickname likho → Register.<br><br>" +
+      "4) Wahan jo config dikhe use <b>firebase-config.js</b> file mein copy-paste karo (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId).<br><br>" +
+      "5) Folder open karne ke liye: console ke top-right <b>Add App</b> → <b>Web</b> bhi chalega. Keys milte hi login active ho jayega.";
+    form.addEventListener("submit", function (e) { e.preventDefault(); });
+    return;
+  }
+
+  var loadCount = 0;
+  function loadScript(src, onload) {
+    var s = document.createElement("script");
+    s.src = src;
+    s.onload = onload;
+    s.onerror = function () {
+      showMsg("Firebase SDK load nahi hua — internet/offline check karo.", false);
+    };
+    document.head.appendChild(s);
+  }
+
+  loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js", function () {
+    loadScript("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js", function () {
+      try {
+        firebase.initializeApp(cfg);
+      } catch (e) { }
+      firebase.auth().onAuthStateChanged(function (user) {
+        if (user) redirectAfterAuth();
+      });
+    });
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    clearMsg();
+    var email = emailEl.value.trim();
+    var pass = passEl.value;
+    var pass2 = pass2El.value;
+
+    if (!email || !pass) {
+      showMsg("Email aur password dono bharo.", false);
+      return;
+    }
+    if (mode === "register") {
+      if (pass.length < 6) {
+        showMsg("Password kam se kam 6 characters ka rakho.", false);
+        return;
+      }
+      if (pass !== pass2) {
+        showMsg("Dono password match nahi kar rahe.", false);
+        return;
+      }
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = mode === "login" ? "LOGIN HOO RAHA HAI..." : "ACCOUNT BAN RAHA HAI...";
+
+    var task = mode === "login"
+      ? firebase.auth().signInWithEmailAndPassword(email, pass)
+      : firebase.auth().createUserWithEmailAndPassword(email, pass);
+
+    task.then(function () {
+      if (mode === "register") {
+        showMsg("Account ban gaya! Redirect ho raha hai...", true);
+      }
+      setTimeout(redirectAfterAuth, 600);
+    }).catch(function (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = mode === "login" ? "LOGIN →" : "CREATE ACCOUNT →";
+      showMsg(friendlyError(err), false);
+    });
+  });
+
+  document.getElementById("forgotLink").addEventListener("click", function () {
+    var email = emailEl.value.trim();
+    if (!email) {
+      showMsg("Pehle apna email upar daalo, phir Forgot password dabao.", false);
+      return;
+    }
+    firebase.auth().sendPasswordResetEmail(email).then(function () {
+      showMsg("Password reset email bhej diya gaya hai. Apna inbox check karo.", true);
+    }).catch(function (err) {
+      showMsg(friendlyError(err), false);
+    });
+  });
+})();
+</script>
+</body>
+</html>

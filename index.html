@@ -8,6 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
+<script src="firebase-config.js"></script>
+<script src="auth-gate.js"></script>
 <style>
   :root{
     --bg:#0b0e13;
@@ -79,7 +81,23 @@
     padding:9px 14px; border-radius:8px;
   }
   .card.alt .go{ color:var(--py-blue); border-color:rgba(75,139,212,0.4); background:var(--py-dim); }
+  .card.alt2 .go{ color:var(--green); border-color:rgba(46,204,113,0.4); background:#0e2a1d; }
   .card:hover .go{ color:var(--text); border-color:var(--java); }
+  .card.alt2:hover{ border-color:var(--green); }
+  .userbar{
+    position:fixed; top:14px; right:14px; z-index:40;
+    display:flex; align-items:center; gap:10px;
+    background:rgba(18,22,29,0.92); border:1px solid var(--line); border-radius:10px;
+    padding:8px 12px; font-family:'JetBrains Mono',monospace; font-size:12px;
+  }
+  .userbar[hidden]{ display:none; }
+  .userbar .email{ color:var(--py-yellow); max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .userbar button{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1px;
+    background:none; border:1px solid rgba(231,76,60,.55); color:#ff8a8a;
+    padding:6px 10px; border-radius:7px; cursor:pointer;
+  }
+  .userbar button:hover{ background:#3a1515; }
   .foot{
     margin-top:44px; color:var(--muted-2); font-family:'JetBrains Mono',monospace;
     font-size:12px; text-align:center; line-height:1.8;
@@ -113,6 +131,11 @@
 </head>
 <body>
 
+  <div class="userbar" id="userbar" hidden>
+    <span class="email" id="userEmail"></span>
+    <button id="logoutBtn" type="button">LOG OUT</button>
+  </div>
+
   <div class="mark"><span class="j">JAVA</span> ⇄ <span class="p">PYTHON</span> ⇄ <span class="c">C++</span></div>
   <h1>DSA &amp; Placement Notes Hub</h1>
   <p class="lead">Java, Python aur C++ — teeno ek saath seekho: theory handbook aur 267 popular LeetCode questions ke solutions ke saath. Neeche saare subjects ke complete placement PDF notes bhi milenge.</p>
@@ -140,6 +163,18 @@
         <span class="stat"><b>Medium</b> + Hard</span>
       </div>
       <span class="go">KHOLO →</span>
+    </a>
+
+    <a class="card alt2" href="codingPrac.html">
+      <div class="tag">Practice · AI Review Console</div>
+      <h2>DSA Practice Console</h2>
+      <p class="desc">204 coding problems — Arrays se Advanced tak. Apna approach likho to AI code bana deta hai; "Mark as solved" dabao to AI aapki code ka review karke exact mistakes, edge cases aur complexity batata hai. Progress browser mein save rehta hai.</p>
+      <div class="stats">
+        <span class="stat"><b>204</b> Problems</span>
+        <span class="stat"><b>17</b> Topics</span>
+        <span class="stat"><b>AI</b> Review + Code Gen</span>
+      </div>
+      <span class="go">PRACTICE →</span>
     </a>
   </div>
 
@@ -182,6 +217,39 @@
     grid.appendChild(a);
   });
   document.getElementById('pdfCount').textContent = pdfs.length + ' PDFs available';
+})();
+</script>
+<script>
+(function () {
+  var bar = document.getElementById('userbar');
+  var emailEl = document.getElementById('userEmail');
+
+  function setBar(email) {
+    emailEl.textContent = email;
+    bar.hidden = false;
+  }
+
+  function initUserBar() {
+    try {
+      firebase.auth().onAuthStateChanged(function (user) {
+        if (user) setBar(user.email || user.uid);
+      });
+    } catch (e) { }
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', function () {
+    try {
+      firebase.auth().signOut().then(function () {
+        localStorage.removeItem('dsa_practice_progress_v1');
+        location.replace('login.html');
+      });
+    } catch (e) {
+      location.replace('login.html');
+    }
+  });
+
+  window.addEventListener('auth:ready', initUserBar);
+  if (window.firebase && window.firebase.auth) initUserBar();
 })();
 </script>
 <script>

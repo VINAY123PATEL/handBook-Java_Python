@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DSA Practice Console — Arrays to Advanced</title>
+<script src="firebase-config.js"></script>
+<script src="auth-gate.js"></script>
+<style>
+  :root{
+    --navy:#0B1E3A; --navy-2:#122B52; --steel:#3E5C86; --ink:#16233B;
+    --paper:#F7F8FA; --line:#DCE2EC; --accent:#0E8F7A; --accent-dim:#CFEDE6;
+    --amber:#C97A2B; --danger:#B23A3A;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    --sans:"Segoe UI",-apple-system,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);display:flex;min-height:100vh;}
+
+  .rail{
+    width:260px;flex-shrink:0;background:var(--navy);color:#CBD6EA;
+    padding:24px 16px;display:flex;flex-direction:column;gap:14px;
+    position:sticky;top:0;height:100vh;overflow-y:auto;
+  }
+  .rail-brand{font-size:12.5px;letter-spacing:.4px;color:#8FA3C6;}
+  .rail-title{font-size:19px;font-weight:700;color:#fff;margin-top:2px;}
+  .progress-pill{
+    background:var(--navy-2);border-radius:8px;padding:10px 12px;font-size:12.5px;color:#CBD6EA;
+  }
+  .progress-pill b{color:#fff;font-size:16px;}
+  .progress-bar-bg{background:#1D3A66;height:6px;border-radius:4px;margin-top:8px;overflow:hidden;}
+  .progress-bar-fill{background:var(--accent);height:100%;border-radius:4px;transition:width .3s;}
+  .cat-list{display:flex;flex-direction:column;gap:3px;margin-top:6px;}
+  .cat-item{
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+    padding:9px 10px;border-radius:7px;font-size:13.3px;cursor:pointer;color:#AEC0DE;
+    border-left:3px solid transparent;
+  }
+  .cat-item:hover{background:var(--navy-2);}
+  .cat-item.active{background:var(--navy-2);color:#fff;border-left-color:var(--accent);}
+  .cat-count{font-size:11px;color:#7B90B8;background:#0F2547;padding:1px 7px;border-radius:20px;}
+  .cat-item.active .cat-count{color:#fff;background:var(--accent);}
+  .rail-foot{margin-top:auto;font-size:11.5px;color:#6B80A6;line-height:1.6;border-top:1px solid #1D3A66;padding-top:12px;}
+  .rail-foot button{width:100%;margin-top:8px;}
+
+  .main{flex:1;padding:32px 42px 60px;max-width:980px;}
+  .top-controls{
+    background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:20px;
+  }
+  .top-controls .row{display:flex;gap:12px;flex-wrap:wrap;}
+  .top-controls .row > div{flex:1;min-width:170px;}
+  label.field-label{display:block;font-weight:600;font-size:12.8px;margin:0 0 5px;color:var(--ink);}
+  input[type=password], input[type=text], select, textarea{
+    width:100%;font-family:var(--sans);font-size:13.5px;padding:9px 11px;
+    border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);
+  }
+  textarea{font-family:var(--mono);font-size:13px;resize:vertical;}
+  input:focus, select:focus, textarea:focus{outline:none;border-color:var(--accent);}
+  .hint{font-size:12px;color:#8B96A8;margin-top:5px;line-height:1.5;}
+  .banner{
+    background:#EDF7F4;border:1px solid #BFE6DA;color:#0E5B4C;font-size:13px;
+    padding:12px 14px;border-radius:8px;margin-bottom:18px;line-height:1.55;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .banner b{font-weight:700;}
+
+  h1.page-title{font-size:24px;margin:0 0 4px;color:var(--navy);font-weight:700;}
+  .page-sub{color:#5A6B85;font-size:13.8px;margin-bottom:22px;line-height:1.5;}
+
+  .problem-card{background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden;}
+  .problem-head{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:15px 18px;cursor:pointer;
+  }
+  .problem-head:hover{background:#FAFBFD;}
+  .problem-title{font-weight:600;font-size:14.8px;color:var(--ink);display:flex;align-items:center;gap:9px;}
+  .solved-dot{width:9px;height:9px;border-radius:50%;background:#D8DEE8;flex-shrink:0;}
+  .solved-dot.done{background:var(--accent);}
+  .problem-toggle{font-size:12.5px;color:var(--steel);font-weight:600;}
+  .problem-body{padding:0 18px 18px;border-top:1px solid var(--line);}
+  .problem-statement{font-size:13.5px;color:#4A5771;line-height:1.6;margin:14px 0;}
+  .problem-statement code{background:#F4F4F4;padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:12.5px;}
+  .prob-item{padding-left:4px;}
+  .prob-lbl{color:var(--navy);font-weight:700;}
+
+  .chat-box{
+    border:1px solid var(--line);border-radius:8px;background:#FBFCFE;
+    max-height:260px;overflow-y:auto;padding:12px;margin-bottom:10px;
+  }
+  .msg{
+    max-width:85%;padding:8px 12px;border-radius:9px;font-size:13.3px;line-height:1.5;
+    margin-bottom:8px;white-space:pre-wrap;font-family:var(--mono);
+  }
+  .msg.user{background:var(--navy);color:#fff;margin-left:auto;border-bottom-right-radius:2px;}
+  .msg.assistant{background:#EEF1F6;color:var(--ink);border-bottom-left-radius:2px;}
+  .msg.note{background:none;color:#8B96A8;font-family:var(--sans);font-style:italic;max-width:100%;text-align:center;font-size:12px;}
+  .prompt-row{display:flex;gap:8px;}
+  .prompt-row textarea{min-height:50px;flex:1;font-family:var(--sans);}
+  .prompt-row button{flex-shrink:0;}
+
+  .code-box{margin-top:12px;}
+  .review-box{
+    margin-top:14px;padding:12px 14px;border-radius:8px;
+    background:#FFF8F0;border:1px solid #F0D7A8;color:#7A5313;
+  }
+  .review-box.ok{background:#EDF7F4;border-color:#BFE6DA;color:#0E5B4C;}
+  .review-box.bad{background:#FDF0F0;border-color:#F0C9C9;color:#8A3A3A;}
+  .review-text{white-space:pre-wrap;font-family:var(--mono);font-size:12.5px;line-height:1.6;margin:8px 0 0;}
+  .btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px;}
+  button{
+    font-family:var(--sans);font-size:13.3px;font-weight:600;padding:9px 16px;
+    border-radius:7px;border:none;cursor:pointer;
+  }
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:disabled{background:#B9C4D3;cursor:not-allowed;}
+  .btn-ghost{background:none;border:1px solid var(--line);color:var(--steel);}
+  .btn-danger-ghost{background:none;border:1px solid #F0C9C9;color:var(--danger);}
+  .btn-solve{background:var(--accent-dim);color:#0E8F7A;border:1px solid #9FD9CB;}
+  .btn-solve.done{background:var(--accent);color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="rail">
+  <div>
+    <div class="rail-brand">DSA PRACTICE</div>
+    <div class="rail-title">Arrays → Advanced</div>
+  </div>
+  <div class="progress-pill">
+    <span id="progressText"><b>0</b>/112 solved</span>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+  </div>
+  <div class="cat-list" id="catList"></div>
+  <div class="rail-foot">
+    Progress (solved + saved code + chat + reviews) is saved in this browser, so you can resume anytime. When you click "Mark as solved", the AI reviews your code and tells you exactly what is wrong. Retake resets one problem; "Retake everything" resets all.
+    <button class="btn-danger-ghost" id="retakeAllBtn">Retake everything</button>
+  </div>
+</div>
+
+<div class="main" id="main"></div>
+
+<script>
+/* ============ DSA QUESTION BANK — 200+ popular + hard problems, detailed ============ */
+
+const topics = [
+  { key:"arrays", name:"Arrays", problems:[
+    { id:"arr1", title:"Two Sum", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the indices of two numbers that add up to a target.</span><br><span class="prob-lbl">Example:</span> <code>[2,7,11,15]</code>, target <code>9</code> → <code>[0,1]</code>.<br><span class="prob-lbl">Constraints:</span> exactly one valid answer exists; you may not use the same element twice. Brute force is O(n²) — aim for O(n).` },
+    { id:"arr2", title:"Best Time to Buy and Sell Stock", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given an array of daily prices, return the maximum profit from one buy (then later) one sell. 0 if you can't profit.</span><br><span class="prob-lbl">Example:</span> <code>[7,1,5,3,6,4]</code> → <code>5</code> (buy @1, sell @6).<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) space. Track the min price seen so far.` },
+    { id:"arr3", title:"Maximum Subarray (Kadane's)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find the contiguous subarray with the largest sum and return that sum.</span><br><span class="prob-lbl">Example:</span> <code>[-2,1,-3,4,-1,2,1,-5,4]</code> → <code>6</code> (subarray <code>[4,-1,2,1]</code>).<br><span class="prob-lbl">Constraints:</span> 1 ≤ n ≤ 10⁵. O(n) Kadane's: reset the running sum to 0 when it goes negative.` },
+    { id:"arr4", title:"Product of Array Except Self", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return an array where each element is the product of every other element — WITHOUT using division.</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3,4]</code> → <code>[24,12,8,6]</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) extra space (output array doesn't count). Two passes: prefix products then suffix products.` },
+    { id:"arr5", title:"Contains Duplicate", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return true if any value appears at least twice in the array, else false.</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3,1]</code> → <code>true</code>; <code>[1,2,3,4]</code> → <code>false</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(n) space using a hash set — or sort and compare neighbours.` },
+    { id:"arr6", title:"Move Zeroes", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> move all 0s to the end while keeping the relative order of non-zero elements. Do it in-place.</span><br><span class="prob-lbl">Example:</span> <code>[0,1,0,3,12]</code> → <code>[1,3,12,0,0]</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) space, single pass with two pointers.` },
+    { id:"arr7", title:"3Sum", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return all unique triplets in the array that sum to 0.</span><br><span class="prob-lbl">Example:</span> <code>[-1,0,1,2,-1,-4]</code> → <code>[[-1,-1,2],[-1,0,1]]</code>.<br><span class="prob-lbl">Constraints:</span> no duplicate triplets. Sort + fix one element, then two-pointer on the rest → O(n²).` },
+    { id:"arr8", title:"Find the Duplicate Number", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> n+1 integers in range [1, n]; exactly one number is repeated (any number of times). Return it.</span><br><span class="prob-lbl">Example:</span> <code>[1,3,4,2,2]</code> → <code>2</code>.<br><span class="prob-lbl">Constraints:</span> no modifying the array, O(1) space. Use Floyd's cycle detection (treat values as pointers).` },
+    { id:"arr9", title:"Trapping Rain Water", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.</span><br><span class="prob-lbl">Example:</span> <code>[0,1,0,2,1,0,1,3,2,1,2,1]</code> → <code>6</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) space using two pointers tracking left_max and right_max; or O(n) with prefix/suffix max arrays.` },
+    { id:"arr10", title:"Maximum Product Subarray", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find the contiguous subarray within an integer array that has the largest product and return that product.</span><br><span class="prob-lbl">Example:</span> <code>[2,3,-2,4]</code> → <code>6</code>; <code>[-2,0,-1]</code> → <code>0</code>.<br><span class="prob-lbl">Constraints:</span> track both max and min at each index (min can become max when multiplied by negative); O(n) time, O(1) space.` },
+    { id:"arr11", title:"Next Permutation", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> rearrange numbers into the lexicographically next greater permutation. If not possible, rearrange to the lowest possible order (ascending). Must be in-place with O(1) extra memory.</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3]</code> → <code>[1,3,2]</code>; <code>[3,2,1]</code> → <code>[1,2,3]</code>.<br><span class="prob-lbl">Constraints:</span> scan from right to find the first dip, swap with the smallest larger element on the right, then reverse the suffix. O(n) time.` },
+    { id:"arr12", title:"Spiral Matrix", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return all elements of an m×n matrix in spiral order (clockwise from outside to inside).</span><br><span class="prob-lbl">Example:</span> <code>[[1,2,3],[4,5,6],[7,8,9]]</code> → <code>[1,2,3,6,9,8,7,4,5]</code>.<br><span class="prob-lbl">Constraints:</span> maintain top/bottom/left/right boundaries and shrink them after each pass; O(m·n) time, O(1) extra space (excluding output).` },
+    { id:"arr13", title:"Range Sum Query — Immutable (prefix sum)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> design a class that answers many queries of 'sum of arr[i..j]' in O(1) each, over a fixed array.</span><br><span class="prob-lbl">Example:</span> arr <code>[-2,0,3,-5,2,-1]</code>, sumRange(0,2)→<code>1</code>, sumRange(2,5)→<code>-1</code>.<br><span class="prob-lbl">Constraints:</span> precompute prefix array where pref[i] = sum(arr[0..i−1]); answer = pref[j+1] − pref[i]. Build O(n), query O(1).` },
+    { id:"arr14", title:"Subarray Sums Divisible by K", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> count the number of contiguous subarrays whose sum is divisible by k.</span><br><span class="prob-lbl">Example:</span> <code>[4,5,0,-2,-3,1]</code>, k=5 → <code>7</code>.<br><span class="prob-lbl">Constraints:</span> prefix-sum modulo k; two subarrays with equal remainder (mod) form a divisible subarray. Negative mods must be normalized: <code>(rem % k + k) % k</code>.` },
+    { id:"arr15", title:"Product of Array Except Self (prefix × suffix passes)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> reimagined for logic clarity — build the output using a prefix-product pass THEN a suffix-product pass, both in one array, no division.</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3,4]</code> → <code>[24,12,8,6]</code>.<br><span class="prob-lbl">Constraints:</span> left pass fills products of all elements left of i; right pass multiplies in the products from the right, carrying a running suffix product. O(n) time, O(1) extra.` },
+    { id:"arr16", title:"Partition Array into Two Sums (suffix trick)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> can the array be split at some index i such that the sum of left part EQUALS the sum of right part (equilibrium index)? Return any such index or -1.</span><br><span class="prob-lbl">Example:</span> <code>[1,7,3,6,5,6]</code> → <code>3</code> (left 1+7+3=11, right 5+6=11).<br><span class="prob-lbl">Constraints:</span> O(1) space single pass — total sum minus running left sum gives the right sum; compare as you sweep. (Equilibrium Index problem.)` }
+  ]},
+  { key:"strings", name:"Strings", problems:[
+    { id:"str1", title:"Valid Anagram", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return true if two strings are anagrams (same characters, same counts).</span><br><span class="prob-lbl">Example:</span> <code>"anagram"</code>, <code>"nagaram"</code> → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> lowercase English letters. Use a frequency counter — O(n) time, O(1) space.` },
+    { id:"str2", title:"Longest Substring Without Repeating Characters", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> length of the longest substring with all distinct characters.</span><br><span class="prob-lbl">Examples:</span> <code>"abcabcbb"</code> → <code>3</code>; <code>"bbbbb"</code> → <code>1</code>; <code>"pwwkew"</code> → <code>3</code>.<br><span class="prob-lbl">Constraints:</span> O(n) sliding window with a set/map tracking the window.` },
+    { id:"str3", title:"Longest Palindromic Substring", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the longest substring of a string that reads the same forwards and backwards.</span><br><span class="prob-lbl">Example:</span> <code>"babad"</code> → <code>"bab"</code> (or <code>"aba"</code>).<br><span class="prob-lbl">Constraints:</span> expand around every centre (odd + even) → O(n²) time, O(1) space.` },
+    { id:"str4", title:"Group Anagrams", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> group all anagrams from a list of strings together.</span><br><span class="prob-lbl">Example:</span> <code>["eat","tea","tan","ate","nat","bat"]</code> → <code>[["eat","tea","ate"],["tan","nat"],["bat"]]</code>.<br><span class="prob-lbl">Constraints:</span> O(n·k) n = #strings, k = max length. Key = sorted characters (or a character count tuple).` },
+    { id:"str5", title:"Longest Common Prefix", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the longest common prefix string among an array of strings, or "" if none.</span><br><span class="prob-lbl">Example:</span> <code>["flower","flow","flight"]</code> → <code>"fl"</code>.<br><span class="prob-lbl">Constraints:</span> compare character by character across all strings.` },
+    { id:"str6", title:"Valid Palindrome", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> check if a string is a palindrome considering only alphanumeric characters and ignoring case.</span><br><span class="prob-lbl">Example:</span> <code>"A man, a plan, a canal: Panama"</code> → <code>true</code>; <code>"race a car"</code> → <code>false</code>.<br><span class="prob-lbl">Constraints:</span> two pointers moving toward the centre, skipping non-alphanumerics.` },
+    { id:"str7", title:"String to Integer (atoi)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> implement atoi: ignore leading whitespace, handle optional +/- sign, read digits, clamp to 32-bit signed range [−2³¹, 2³¹−1].</span><br><span class="prob-lbl">Example:</span> <code>"   -42"</code> → <code>-42</code>; <code>"4193 with words"</code> → <code>4193</code>.<br><span class="prob-lbl">Constraints:</span> build the number digit-by-digit, watch overflow.` },
+    { id:"str8", title:"Minimum Window Substring", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the minimum-length window in string s that contains all characters of string t (including duplicates).</span><br><span class="prob-lbl">Example:</span> <code>s="ADOBECODEBANC"</code>, <code>t="ABC"</code> → <code>"BANC"</code>.<br><span class="prob-lbl">Constraints:</span> sliding window with two frequency maps / a "need" counter → O(n).` },
+    { id:"str9", title:"Longest Valid Parentheses", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find the length of the longest contiguous valid (well-formed) parentheses substring.</span><br><span class="prob-lbl">Example:</span> <code>"(()"</code> → <code>2</code>; <code>")()())"</code> → <code>4</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time — use a stack storing indices, or two-pass left-to-right / right-to-left scan tracking open/close counts.` },
+    { id:"str10", title:"Decode Ways", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> count the total number of ways to decode a string of digits (A=1, B=2, ..., Z=26) into letters.</span><br><span class="prob-lbl">Example:</span> <code>"226"</code> → <code>3</code> (BZ, VF, BBF).<br><span class="prob-lbl">Constraints:</span> O(n) DP: dp[i] = dp[i-1] (if single digit valid) + dp[i-2] (if two-digit 10–26); handle leading zeros carefully.` },
+    { id:"str11", title:"Palindromic Substrings (count all)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> count all palindromic substrings in a given string (not just the longest).</span><br><span class="prob-lbl">Example:</span> <code>"abc"</code> → <code>3</code>; <code>"aaa"</code> → <code>6</code>.<br><span class="prob-lbl">Constraints:</span> expand around every centre (2n−1 centres for odd + even) → O(n²) time, O(1) space.` },
+    { id:"str12", title:"Minimum Window Subsequence", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given two strings s1 and s2, find the minimum window in s1 that contains s2 as a subsequence.</span><br><span class="prob-item"><span class="prob-lbl">Example:</span> <code>s1="abcdebdde"</code>, <code>s2="bde"</code> → <code>"bcde"</code> (length 4).</span><br><span class="prob-lbl">Constraints:</span> O(n·m) DP or two-pass greedy: first pass finds forward match, second pass finds minimum window ending at each position.` }
+  ]},
+  { key:"searching", name:"Searching", problems:[
+    { id:"se1", title:"Binary Search", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the index of a target in a sorted array, or -1 if absent.</span><br><span class="prob-lbl">Example:</span> <code>[-1,0,3,5,9,12]</code>, <code>9</code> → <code>4</code>.<br><span class="prob-lbl">Constraints:</span> O(log n). Be careful with the mid computation and lo/hi update to avoid infinite loops.` },
+    { id:"se2", title:"Search in Rotated Sorted Array", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find a target in a sorted array that was rotated at an unknown pivot.</span><br><span class="prob-lbl">Example:</span> <code>[4,5,6,7,0,1,2]</code>, target <code>0</code> → <code>4</code>.<br><span class="prob-lbl">Constraints:</span> O(log n). Binary search while checking which half is sorted.` },
+    { id:"se3", title:"First and Last Position of Element", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return [start, end] indices of a target value in a sorted array, or [-1,-1].</span><br><span class="prob-lbl">Example:</span> <code>[5,7,7,8,8,10]</code>, <code>8</code> → <code>[3,4]</code>.<br><span class="prob-lbl">Constraints:</span> O(log n) — binary search for the left boundary and again for the right boundary.` },
+    { id:"se4", title:"Search a 2D Matrix", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> search a target in an m×n matrix where each row is sorted ascending and the first element of each row is > the last of the previous row.</span><br><span class="prob-lbl">Example:</span> matrix <code>[[1,3,5,7],[10,11,16,20],[23,30,34,60]]</code>, target <code>3</code> → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> treat the matrix as one sorted array → O(log(m·n)) binary search.` },
+    { id:"se5", title:"Find Minimum in Rotated Sorted Array", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find the minimum element in a sorted array rotated at an unknown pivot.</span><br><span class="prob-lbl">Example:</span> <code>[3,4,5,1,2]</code> → <code>1</code>.<br><span class="prob-lbl">Constraints:</span> O(log n), no duplicates. Compare mid with the right edge.` },
+    { id:"se6", title:"Peak Index in a Mountain Array", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find the index of the peak in a mountain array (strictly increasing then strictly decreasing).</span><br><span class="prob-lbl">Example:</span> <code>[0,2,1,0]</code> → <code>1</code>.<br><span class="prob-lbl">Constraints:</span> O(log n) binary search on the slope (ascending vs descending half).` },
+    { id:"se7", title:"Sqrt(x)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the integer square root of a non-negative integer (floor of √x), without floating point.</span><br><span class="prob-lbl">Example:</span> <code>8</code> → <code>2</code>; <code>9</code> → <code>3</code>.<br><span class="prob-lbl">Constraints:</span> binary search in [0, x]; watch out for mid·mid overflow.` },
+    { id:"se8", title:"Koko Eating Bananas", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> koko eats piles of bananas; can eat at most k/hour and returns each hour. Find the minimum k to finish all piles within h hours.</span><br><span class="prob-lbl">Example:</span> <code>[3,6,7,11]</code>, <code>h = 8</code> → <code>4</code>.<br><span class="prob-lbl">Constraints:</span> binary search over k; feasibility check is O(n) per try.` },
+    { id:"se9", title:"Median of Two Sorted Arrays", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given two sorted arrays, find the median of the combined sorted array in O(log(min(m,n))) time.</span><br><span class="prob-lbl">Example:</span> <code>[1,3]</code> + <code>[2]</code> → <code>2.0</code>; <code>[1,2]</code> + <code>[3,4]</code> → <code>2.5</code>.<br><span class="prob-lbl">Constraints:</span> binary search on the smaller array — partition both so left half ≤ right half; O(1) space.` },
+    { id:"se10", title:"Split Array Largest Sum", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> split an array into m non-empty contiguous subarrays to minimize the largest sum among them.</span><br><span class="prob-lbl">Example:</span> <code>[7,2,5,10,8]</code>, m=2 → <code>18</code> ([7,2,5] + [10,8]).<br><span class="prob-lbl">Constraints:</span> binary search on the answer (range = max element to total sum); greedily check if m splits suffice. O(n·log(sum)).` },
+    { id:"se11", title:"Find in Mountain Array", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> search a target in a mountain array (first strictly increasing then strictly decreasing) with a restricted API — only access via .get(index) and .length().</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3,4,5,3,1]</code>, target <code>3</code> → index <code>4</code> or <code>5</code>.<br><span class="prob-lbl">Constraints:</span> O(log n): first binary search for the peak, then binary search on each half. Three binary searches total.` },
+    { id:"se12", title:"Capacity To Ship Packages Within D Days", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> a conveyor belt has packages with weights; find the minimum capacity to ship all packages within D days (packages must ship in order).</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3,4,5,6,7,8,9,10]</code>, D=5 → <code>15</code>.<br><span class="prob-lbl">Constraints:</span> binary search on capacity (range = max weight to total weight); simulate shipping in O(n) per check. O(n·log(sum)).` }
+  ]},
+  { key:"sorting", name:"Sorting", problems:[
+    { id:"so1", title:"Merge Sort", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> implement merge sort on an integer array — divide, recursively sort, merge two sorted halves.</span><br><span class="prob-lbl">Example:</span> <code>[5,2,4,6,1,3]</code> → <code>[1,2,3,4,5,6]</code>.<br><span class="prob-lbl">Constraints:</span> O(n log n) time, O(n) auxiliary space for merging. Stable sort.` },
+    { id:"so2", title:"Quick Sort", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> implement quick sort with a chosen pivot and in-place partitioning.</span><br><span class="prob-lbl">Example:</span> <code>[10,7,8,9,1,5]</code> → <code>[1,5,7,8,9,10]</code>.<br><span class="prob-lbl">Constraints:</span> average O(n log n), worst O(n²) — avoid by choosing a good pivot (e.g. median-of-three or random).` },
+    { id:"so3", title:"Sort Colors (Dutch National Flag)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> sort an array containing only 0s, 1s, and 2s in-place with a single pass.</span><br><span class="prob-lbl">Example:</span> <code>[2,0,2,1,1,0]</code> → <code>[0,0,1,1,2,2]</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) space, three pointers (low, mid, high).` },
+    { id:"so4", title:"Kth Largest Element in an Array", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the kth largest element in an unsorted array.</span><br><span class="prob-lbl">Example:</span> <code>[3,2,1,5,6,4]</code>, k=2 → <code>5</code>.<br><span class="prob-lbl">Constraints:</span> average O(n) using quickselect, or O(n log k) with a min-heap of size k.` },
+    { id:"so5", title:"Missing Number (Cyclic / XOR)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> array of n distinct integers in [0, n]; one number is missing. Find it.</span><br><span class="prob-lbl">Example:</span> <code>[3,0,1]</code> → <code>2</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) space — XOR all indices with all values, or use sum formula.` },
+    { id:"so6", title:"Find All Numbers Disappeared in an Array", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> n integers in [1, n]; some appear twice, some zero times. Return all missing numbers.</span><br><span class="prob-lbl">Example:</span> <code>[4,3,2,7,8,2,3,1]</code> → <code>[5,6]</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) space (modify the array: mark visited indices with a sign).` },
+    { id:"so7", title:"Insertion Sort", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> implement insertion sort — grow a sorted prefix by inserting each element into place.</span><br><span class="prob-lbl">Example:</span> <code>[9,5,1,4,3]</code> → <code>[1,3,4,5,9]</code>.<br><span class="prob-lbl">Constraints:</span> O(n²) worst, O(n) on nearly-sorted input. In-place.` },
+    { id:"so8", title:"Merge Intervals (sorting key)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> merge all overlapping intervals [[start,end]].</span><br><span class="prob-lbl">Example:</span> <code>[[1,3],[2,6],[8,10],[15,18]]</code> → <code>[[1,6],[8,10],[15,18]]</code>.<br><span class="prob-lbl">Constraints:</span> sort by start, then walk and merge when next.start ≤ current.end.` },
+    { id:"so9", title:"Largest Number (custom comparator)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> arrange an array of non-negative integers to form the largest possible number. Return it as a string.</span><br><span class="prob-lbl">Example:</span> <code>[3,30,34,5,9]</code> → <code>"9534330"</code>.<br><span class="prob-lbl">Constraints:</span> sort with comparator: xy vs yx (string concatenation comparison); handle the "all zeros" edge case → "0".` },
+    { id:"so10", title:"Car Fleet", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> cars at positions with speeds head to the same target; a faster car behind a slower one joins it as a fleet. Return the number of fleets arriving at the target.</span><br><span class="prob-lbl">Example:</span> target=12, <code>[10,8,0,5,3]</code>, speeds <code>[2,4,1,1,3]</code> → <code>3</code>.<br><span class="prob-lbl">Constraints:</span> sort by position descending; compute arrival time (target−pos)/speed; a later car with smaller arrival time joins the previous fleet. O(n log n).` },
+    { id:"so11", title:"Hand of Straights", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given an array of integers and groupSize, can you split the cards into consecutive groups of the given size?</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3,6,2,3,4,7,8]</code>, groupSize=3 → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> sort or use a frequency map; always start a group from the smallest remaining card and consume consecutive numbers. O(n log n).` },
+    { id:"so12", title:"Minimum Increment to Make Array Unique", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> the minimum number of +1 increments needed to make every value in an array unique.</span><br><span class="prob-lbl">Example:</span> <code>[3,2,1,2,1,7]</code> → <code>6</code>.<br><span class="prob-lbl">Constraints:</span> sort then greedily bump each element to at least prev+1; accumulate increments. O(n log n).` }
+  ]},
+  { key:"hashing", name:"Hashing", problems:[
+    { id:"ha1", title:"Subarray Sum Equals K", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> count contiguous subarrays whose sum equals k.</span><br><span class="prob-lbl">Example:</span> <code>[1,1,1]</code>, k=2 → <code>2</code> ([1,1] twice).<br><span class="prob-lbl">Constraints:</span> O(n) with prefix-sum frequency map. Watch: insert prefix into map BEFORE updating the running sum's frequency.` },
+    { id:"ha2", title:"Longest Consecutive Sequence", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> length of the longest run of consecutive integers in an unsorted array.</span><br><span class="prob-lbl">Example:</span> <code>[100,4,200,1,3,2]</code> → <code>4</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(n) space — put all in a set, only start counting from sequence starts.` },
+    { id:"ha3", title:"First Missing Positive", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> smallest missing positive integer in an unsorted array.</span><br><span class="prob-lbl">Example:</span> <code>[3,4,-1,1]</code> → <code>2</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) extra space — place each value in its correct position (cyclic placement).` },
+    { id:"ha4", title:"Two Sum — Hashmap Approach in Depth", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> re-solve Two Sum focusing on the O(n) hashmap approach and why it beats O(n²) brute force.</span><br><span class="prob-lbl">Idea:</span> store value→index as you scan; for each number check if <code>target - num</code> is already in the map.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(n) space. Single pass.` },
+    { id:"ha5", title:"Find All Duplicates in an Array", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find all values that appear exactly twice in an array of n numbers in [1, n].</span><br><span class="prob-lbl">Example:</span> <code>[4,3,2,7,8,2,3,1]</code> → <code>[2,3]</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) extra space — use index negation trick.` },
+    { id:"ha6", title:"Valid Sudoku", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> determine if a partially filled 9×9 Sudoku board is valid (no duplicates in any row, column, or 3×3 box; '.' counts as empty).</span><br><span class="prob-lbl">Example:</span> a valid partially-filled board → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> use hash sets keyed by row, col, and box index <code>(r/3)*3 + (c/3)</code>.` },
+    { id:"ha7", title:"Contains Duplicate II", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return true if two equal elements exist within distance k of each other (indices differ ≤ k).</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3,1]</code>, k=3 → <code>true</code>; k=1 → <code>false</code>.<br><span class="prob-lbl">Constraints:</span> O(n) sliding window of size k with a hash set; remove elements that leave the window.` },
+    { id:"ha8", title:"Longest Substring with At Most K Distinct", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> length of the longest substring containing at most k distinct characters.</span><br><span class="prob-lbl">Example:</span> <code>"eceba"</code>, k=2 → <code>3</code> ("ece").<br><span class="prob-lbl">Constraints:</span> O(n) sliding window with a frequency map telling how many distinct chars are in the window.` },
+    { id:"ha9", title:"LRU Cache", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> design a data structure supporting get(key) and put(key,value) in average O(1) time with Least Recently Used eviction when capacity is exceeded.</span><br><span class="prob-lbl">Example:</span> capacity 2: put(1,1), put(2,2), get(1)→1, put(3,3) evicts key 2.<br><span class="prob-lbl">Constraints:</span> doubly-linked list + hash map (key → node). On access, move the node to the head; evict from the tail.` },
+    { id:"ha10", title:"RandomizedSet (Insert Delete GetRandom O(1))", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> design a data structure supporting insert, delete, and getRandom all in average O(1), with no duplicates allowed.</span><br><span class="prob-lbl">Example:</span> insert(1), insert(2), remove(1), getRandom() → one of remaining values with equal probability.<br><span class="prob-lbl">Constraints:</span> hash map (value → index in array) + dynamic array. On delete, swap the last element into the deleted slot so the array stays dense for O(1) random access.` },
+    { id:"ha11", title:"Minimum Area Rectangle", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given points (x,y) in the plane, find the minimum area of a rectangle whose sides are parallel to the axes (corners must be given points). Return 0 if none.</span><br><span class="prob-lbl">Example:</span> <code>[[1,1],[1,3],[3,1],[3,3],[2,2]]</code> → <code>4</code>.<br><span class="prob-lbl">Constraints:</span> for each pair of points sharing an x or y, check opposite corners in a hash set; O(n²) pairs is acceptable.` },
+    { id:"ha12", title:"Sort Characters by Frequency (bucket optimization)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the string sorted by decreasing character frequency, grouping equal-frequency chars together.</span><br><span class="prob-lbl">Example:</span> <code>"tree"</code> → <code>"eert"</code> or <code>"eetr"</code>.<br><span class="prob-lbl">Constraints:</span> count frequencies with a map, then bucket-sort by frequency (index = frequency) for O(n) total instead of O(n log n).` }
+  ]},
+  { key:"linkedlist", name:"Linked List", problems:[
+    { id:"ll1", title:"Reverse a Linked List", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> reverse a singly linked list iteratively (or recursively).</span><br><span class="prob-lbl">Example:</span> <code>1→2→3→4→5→NULL</code> → <code>5→4→3→2→1→NULL</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) space (iterative with prev/curr/next pointers).` },
+    { id:"ll2", title:"Detect Cycle (Floyd's Algorithm)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> determine whether a linked list has a cycle.</span><br><span class="prob-lbl">Example:</span> a list whose tail points into an earlier node → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) space with slow & fast pointers. They meet if a cycle exists.` },
+    { id:"ll3", title:"Merge Two Sorted Lists", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> merge two sorted linked lists into one sorted list.</span><br><span class="prob-lbl">Example:</span> <code>1→2→4</code> + <code>1→3→4</code> → <code>1→1→2→3→4→4</code>.<br><span class="prob-lbl">Constraints:</span> O(m+n) time, O(1) space with a dummy head.` },
+    { id:"ll4", title:"Remove Nth Node From End", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> remove the nth node from the end of a linked list in a single pass.</span><br><span class="prob-lbl">Example:</span> <code>1→2→3→4→5</code>, n=2 → <code>1→2→3→5</code>.<br><span class="prob-lbl">Constraints:</span> two pointers n apart; use a dummy node to handle removing the head.` },
+    { id:"ll5", title:"Middle of the Linked List", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the middle node of a linked list (if two middles, return the second).</span><br><span class="prob-lbl">Example:</span> <code>1→2→3→4→5</code> → node <code>3</code>.<br><span class="prob-lbl">Constraints:</span> slow & fast pointers — fast moves 2 steps while slow moves 1.` },
+    { id:"ll6", title:"Intersection of Two Linked Lists", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find the node where two singly linked lists intersect, or null.</span><br><span class="prob-lbl">Example:</span> two lists that share a common tail node → that node.<br><span class="prob-lbl">Constraints:</span> O(n+m) time, O(1) space — walk both; when one reaches the end, point it to the other's head.` },
+    { id:"ll7", title:"Palindrome Linked List", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> check whether a linked list's values form a palindrome.</span><br><span class="prob-lbl">Example:</span> <code>1→2→2→1</code> → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> O(n) time, O(1) space — find middle, reverse second half, compare, optionally restore.` },
+    { id:"ll8", title:"Add Two Numbers", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> two numbers stored as linked lists in reverse order; return the sum as a reversed linked list.</span><br><span class="prob-lbl">Example:</span> <code>[2→4→3]</code> + <code>[5→6→4]</code> → <code>[7→0→8]</code> (342+465=807).<br><span class="prob-lbl">Constraints:</span> O(max(m,n)), carry propagation, handle unequal lengths and a trailing carry.` },
+    { id:"ll9", title:"Reverse Linked List II (reverse range)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> reverse the nodes between positions left and right (1-indexed) of a singly linked list, leaving the rest unchanged.</span><br><span class="prob-lbl">Example:</span> <code>1→2→3→4→5</code>, left=2, right=4 → <code>1→4→3→2→5</code>.<br><span class="prob-lbl">Constraints:</span> one pass, O(1) space — keep pointers to the node before left and reverse the sublist in place, then reconnect.` },
+    { id:"ll10", title:"Swap Nodes in Pairs", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> swap every two adjacent nodes of a linked list and return its head (do not modify values, restructure nodes).</span><br><span class="prob-lbl">Example:</span> <code>1→2→3→4</code> → <code>2→1→4→3</code>.<br><span class="prob-lbl">Constraints:</span> iterative with a dummy head and careful pointer juggling, or recursion. O(n) time, O(1) space (iterative).` },
+    { id:"ll11", title:"Copy List with Random Pointer", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> deep-copy a linked list where each node has next and random pointers (random may point to any node or null).</span><br><span class="prob-lbl">Example:</span> list [[7,null],[13,0],[11,4],[10,2],[1,0]] → full independent copy with same random structure.<br><span class="prob-lbl">Constraints:</span> O(n) — either a map from old → new nodes (O(n) extra space) or interleave copies old→copy→old→copy in place (O(1) extra space).` },
+    { id:"ll12", title:"Merge K Sorted Lists (via divide & conquer)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> merge k sorted linked lists into one sorted list using a divide-and-conquer / pairwise merge strategy instead of a heap.</span><br><span class="prob-lbl">Example:</span> [[1→4→5],[1→3→4],[2→6]] → <code>1→1→2→3→4→4→5→6</code>.<br><span class="prob-lbl">Constraints:</span> pairwise merge lists 0 with k−1, 1 with k−2... each round halves the count → O(N log k), O(1) extra space.` }
+  ]},
+  { key:"stackqueue", name:"Stacks & Queues", problems:[
+    { id:"sq1", title:"Valid Parentheses", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> check if a string of <code>()[]{}</code> is correctly matched and nested.</span><br><span class="prob-lbl">Example:</span> <code>"()[]{}"</code> → <code>true</code>; <code>"(]"</code> → <code>false</code>.<br><span class="prob-lbl">Constraints:</span> O(n) stack; push opens, pop-and-compare on closes, empty at the end.` },
+    { id:"sq2", title:"Min Stack", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> design a stack supporting push, pop, top, and getMin, all in O(1).</span><br><span class="prob-lbl">Example:</span> push 2,1,3 → getMin()=1, pop → getMin()... <br><span class="prob-lbl">Constraints:</span> store pairs (value, current-min), or a parallel min stack.` },
+    { id:"sq3", title:"Implement Queue using Stacks", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> implement a FIFO queue using only two stacks.</span><br><span class="prob-lbl">Example:</span> push 1,2,3 → peek=1, pop=1.<br><span class="prob-lbl">Constraints:</span> amortized O(1). Transfer to the second stack only when popping and it's empty.` },
+    { id:"sq4", title:"Next Greater Element", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> for each element find the next greater element to its right, else -1.</span><br><span class="prob-lbl">Example:</span> <code>[4,5,2,25]</code> → <code>[5,25,25,-1]</code>.<br><span class="prob-lbl">Constraints:</span> O(n) monotonic decreasing stack.` },
+    { id:"sq5", title:"Daily Temperatures", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> for each day, how many days until a warmer temperature appears (0 if none).</span><br><span class="prob-lbl">Example:</span> <code>[73,74,75,71,69,72,76,73]</code> → <code>[1,1,4,2,1,1,0,0]</code>.<br><span class="prob-lbl">Constraints:</span> O(n) monotonic stack storing indices.` },
+    { id:"sq6", title:"Largest Rectangle in Histogram", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given an array of bar heights, find the area of the largest rectangle that can be drawn in the histogram.</span><br><span class="prob-lbl">Example:</span> <code>[2,1,5,6,2,3]</code> → <code>10</code>.<br><span class="prob-lbl">Constraints:</span> O(n) monotonic increasing stack computing width when a bar pops.` },
+    { id:"sq7", title:"Evaluate Reverse Polish Notation", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> evaluate an expression written in postfix (Reverse Polish) notation; operators are + - * / (integer division toward zero).</span><br><span class="prob-lbl">Example:</span> <code>["2","1","+","3","*"]</code> → <code>9</code>.<br><span class="prob-lbl">Constraints:</span> O(n) stack; watch integer division of negatives (use Math.trunc).` },
+    { id:"sq8", title:"Sliding Window Maximum", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the maximum in every contiguous window of size k.</span><br><span class="prob-lbl">Example:</span> <code>[1,3,-1,-3,5,3,6,7]</code>, k=3 → <code>[3,3,5,5,6,7]</code>.<br><span class="prob-lbl">Constraints:</span> O(n) using a deque (monotonic decreasing) that stores indices.` },
+    { id:"sq9", title:"Trapping Rain Water (stack)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> same as the elevation-map water trap, but solve it with a monotonic stack storing indices.</span><br><span class="prob-lbl">Example:</span> <code>[0,1,0,2,1,0,1,3,2,1,2,1]</code> → <code>6</code>.<br><span class="prob-lbl">Constraints:</span> push indices; on a bar taller than the top, pop and compute water = (min(left,right) − height[popped]) × width between them. O(n).` },
+    { id:"sq10", title:"Decode String", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given an encoded string like <code>3[a2[c]]</code>, decode it following the rule k[encoded] → the substring repeated k times.</span><br><span class="prob-lbl">Example:</span> <code>"3[a2[c]]"</code> → <code>"accaccacc"</code>.<br><span class="prob-lbl">Constraints:</span> two stacks (one for counts, one for built strings); combine nested patterns on ']'. O(n) where n = output length.` },
+    { id:"sq11", title:"Asteroid Collision", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> an array of asteroids; positive = moving right, negative = moving left; same-size collisions destroy both, different-size destroy the smaller. Return the survivors after all collisions.</span><br><span class="prob-lbl">Example:</span> <code>[10,2,-5]</code> → <code>[10]</code>; <code>[8,-8]</code> → <code>[]</code>.<br><span class="prob-lbl">Constraints:</span> O(n) stack; only a positive followed by a negative collides — compare magnitudes repeatedly.` },
+    { id:"sq12", title:"Basic Calculator II (no eval)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> evaluate a string expression with + - * / (integer division truncates toward zero) — no parentheses, no eval().</span><br><span class="prob-lbl">Example:</span> <code>"3+2*2"</code> → <code>7</code>; <code>" 3/2 "</code> → <code>1</code>; <code>" 3+5 / 2 "</code> → <code>5</code>.<br><span class="prob-lbl">Constraints:</span> single pass, stack of numbers; push sign·num for +/-, and pop+calc for * /. Sum the stack at the end.` }
+  ]},
+  { key:"trees", name:"Trees", problems:[
+    { id:"tr1", title:"Maximum Depth of Binary Tree", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the maximum depth (root-to-leaf node count) of a binary tree.</span><br><span class="prob-lbl">Example:</span> a root with two subtrees → depth 2 or more depending on structure.<br><span class="prob-lbl">Constraints:</span> DFS recurse: 1 + max(left, right); or BFS level count.` },
+    { id:"tr2", title:"Validate Binary Search Tree", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> check whether a binary tree is a valid BST (left ≤ node < right with global bounds).</span><br><span class="prob-lbl">Example:</span> <code>2 ← root with 1 & 3</code> → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> pass down (lo, hi) bounds per node — checking only child arrays is NOT enough.` },
+    { id:"tr3", title:"Binary Tree Level Order Traversal", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return node values level by level (BFS).</span><br><span class="prob-lbl">Example:</span> <code>root 3, children 9 and 20(15,7)</code> → <code>[[3],[9,20],[15,7]]</code>.<br><span class="prob-lbl">Constraints:</span> queue-based BFS, track level size to group rows.` },
+    { id:"tr4", title:"Lowest Common Ancestor of a BST", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find the LCA of two nodes in a BST.</span><br><span class="prob-lbl">Example:</span> BST, p=2, q=8 → LCA could be 6, etc.<br><span class="prob-lbl">Constraints:</span> O(h): if both < node go left, both > node go right, else node is the LCA.` },
+    { id:"tr5", title:"Invert Binary Tree", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> mirror a binary tree by swapping every node's left & right children.</span><br><span class="prob-lbl">Example:</span> <code>[4,2,7,1,3,6,9]</code> → <code>[4,7,2,9,6,3,1]</code>.<br><span class="prob-lbl">Constraints:</span> recursive swap, or iterative with a stack/queue.` },
+    { id:"tr6", title:"Same Tree", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> check whether two binary trees are structurally identical with equal values.</span><br><span class="prob-lbl">Example:</span> two identical trees → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> recursion: both null → true, one null → false, values equal AND subtrees equal.` },
+    { id:"tr7", title:"Diameter of Binary Tree", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> the diameter is the length (in edges) of the longest path between any two nodes.</span><br><span class="prob-lbl">Example:</span> a skewed tree → diameter equals its height-ish.<br><span class="prob-lbl">Constraints:</span> post-order DFS: at each node, diameter = max over (leftHeight + rightHeight); track global max.` },
+    { id:"tr8", title:"Kth Smallest Element in a BST", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the kth smallest value in a BST (1-indexed).</span><br><span class="prob-lbl">Example:</span> <code>[3,1,4,null,2]</code>, k=1 → <code>1</code>.<br><span class="prob-lbl">Constraints:</span> in-order traversal (left→node→right) visits sorted order; stop at kth.` },
+    { id:"tr9", title:"Serialize and Deserialize Binary Tree", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> design an algorithm to convert a binary tree to a string and back — must handle null children and reconstruct the exact same tree.</span><br><span class="prob-lbl">Example:</span> tree root 1 with children 2,3 → serialize to something like <code>"1,2,null,null,3,null,null"</code>, deserialize restores it.<br><span class="prob-lbl">Constraints:</span> pre-order with a null marker, or BFS level-order with nulls; rebuild with an index pointer (DFS) or queue (BFS).` },
+    { id:"tr10", title:"Binary Tree Maximum Path Sum", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> a path may start/end at any two nodes and travel parent→child only; find the maximum path sum.</span><br><span class="prob-lbl">Example:</span> <code>[-10,9,20,null,null,15,7]</code> → <code>42</code> (15→20→7).<br><span class="prob-lbl">Constraints:</span> post-order DFS; at each node candidate = node.val + leftGain + rightGain; return to parent only the best single branch. Be careful with negatives — clamp gains at 0.` },
+    { id:"tr11", title:"Construct Binary Tree from Preorder and Inorder", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> rebuild a unique binary tree given its preorder and inorder traversals.</span><br><span class="prob-lbl">Example:</span> preorder <code>[3,9,20,15,7]</code>, inorder <code>[9,3,15,20,7]</code> → the original tree.<br><span class="prob-lbl">Constraints:</span> first preorder element is the root; find it in inorder to split left/right subtrees; use a hash map for O(n) index lookups.` },
+    { id:"tr12", title:"Flatten Binary Tree to Linked List", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> flatten a binary tree in-place so that every node's right points to the next node in pre-order and left = null (should look like a right-skewed list).</span><br><span class="prob-lbl">Example:</span> <code>[1,2,5,3,4,null,6]</code> → <code>1→2→3→4→5→6</code>.<br><span class="prob-lbl">Constraints:</span> O(1) extra space via Morris-style threading or reverse pre-order (right, left, root) building the tail backwards.` }
+  ]},
+  { key:"heaps", name:"Heaps", problems:[
+    { id:"he1", title:"Kth Largest Element in a Stream", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> design a class tracking the kth largest element as numbers are added one by one.</span><br><span class="prob-lbl">Example:</span> k=3, add [4,5,8,2] → kth largest 4; add 5 → 5.<br><span class="prob-lbl">Constraints:</span> keep a min-heap of size k; keep only the top-k elements.` },
+    { id:"he2", title:"Top K Frequent Elements", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the k most frequently occurring elements.</span><br><span class="prob-lbl">Example:</span> <code>[1,1,1,2,2,3]</code>, k=2 → <code>[1,2]</code>.<br><span class="prob-lbl">Constraints:</span> freq map + min-heap of size k (O(n log k)), or bucket sort (O(n)).` },
+    { id:"he3", title:"Merge K Sorted Lists", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> merge k sorted linked lists into one sorted list.</span><br><span class="prob-lbl">Example:</span> [[1→4→5],[1→3→4],[2→6]] → <code>1→1→2→3→4→4→5→6</code>.<br><span class="prob-lbl">Constraints:</span> O(N log k) with a min-heap holding the head of each list.` },
+    { id:"he4", title:"Find Median from Data Stream", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> support addNum and findMedian as numbers arrive one by one.</span><br><span class="prob-lbl">Example:</span> add 1,2 → median 1.5; add 3 → median 2.<br><span class="prob-lbl">Constraints:</span> two heaps: max-heap for the lower half, min-heap for the upper half; keep sizes balanced.` },
+    { id:"he5", title:"K Closest Points to Origin", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the k points (x,y) closest to the origin by Euclidean distance.</span><br><span class="prob-lbl">Example:</span> <code>[[1,3],[-2,2]]</code>, k=1 → <code>[[-2,2]]</code>.<br><span class="prob-lbl">Constraints:</span> max-heap of size k, or quickselect → O(n log k) / O(n) average.` },
+    { id:"he6", title:"Sort Characters by Frequency", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the string sorted by character frequency descending.</span><br><span class="prob-lbl">Example:</span> <code>"cccaaa"</code> → could be <code>"cccaaa"</code> or <code>"aaaccc"</code>.<br><span class="prob-lbl">Constraints:</span> freq map then sort or max-heap.` },
+    { id:"he7", title:"Reorganize String", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> rearrange characters so no two adjacent characters are the same; return "" if impossible.</span><br><span class="prob-lbl">Example:</span> <code>"aab"</code> → <code>"aba"</code>; <code>"aaab"</code> → <code>""</code>.<br><span class="prob-lbl">Constraints:</span> max-heap by frequency; if any char count > (n+1)/2, impossible. Alternate placing from the heap.` },
+    { id:"he8", title:"Task Scheduler", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> tasks are letters; each task takes 1 unit; identical tasks need n cooling units between them. Return the minimum number of units.</span><br><span class="prob-lbl">Example:</span> tasks=[A,A,A,B,B,B], n=2 → <code>8</code> (A→B→idle→A→B→idle→A→B).<br><span class="prob-lbl">Constraints:</span> use the max frequency formula, or simulate with a max-heap + cooldown queue.` },
+    { id:"he9", title:"IPO (Initial Public Offering)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> you have w initial capital; each project i needs pure capital[i] and yields profit[i]. At most k projects, must have capital ≥ required to start. Maximize final capital.</span><br><span class="prob-lbl">Example:</span> w=0, k=2, capitals <code>[0,1,1]</code>, profits <code>[1,2,3]</code> → <code>4</code>.<br><span class="prob-lbl">Constraints:</span> sort projects by capital; add all affordable into a max-heap (by profit), pick the top. Greedy + heap → O(n log n).` },
+    { id:"he10", title:"Maximum Frequency Stack", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> design a stack where pop() removes the most frequent element (ties broken by most recent).</span><br><span class="prob-lbl">Example:</span> push 5,7,5,7,4,5 → pop()=5, pop()=7, pop()=5.<br><span class="prob-lbl">Constraints:</span> maintain freq map per value and groups bucket (map freq → stack); pop from the highest-freq bucket and decrease that value's count. O(1) per op.` },
+    { id:"he11", title:"Sliding Window Median", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the median of every contiguous window of size k as you slide.</span><br><span class="prob-lbl">Example:</span> <code>[1,3,-1,-3,5,3,6,7]</code>, k=3 → <code>[1,-1,-1,3,5,6]</code>.<br><span class="prob-lbl">Constraints:</span> two heaps (max/min) with lazy deletion — a map of pending removals to keep heap tops accurate. O(n log k).` },
+    { id:"he12", title:"Meeting Rooms II", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given meeting intervals [start,end], find the minimum number of meeting rooms required so no meetings overlap.</span><br><span class="prob-lbl">Example:</span> <code>[[0,30],[5,10],[15,20]]</code> → <code>2</code>.<br><span class="prob-lbl">Constraints:</span> sort by start; a min-heap of end-times — if the earliest end ≤ current start, reuse that room (pop then push), else add a room. O(n log n).` }
+  ]},
+  { key:"graphs", name:"Graphs", problems:[
+    { id:"gr1", title:"Number of Islands", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> count groups of adjacent 1s in a 2D grid of 0/1.</span><br><span class="prob-lbl">Example:</span> <code>[["1","1","0"],["1","0","0"],["0","0","1"]]</code> → <code>2</code>.<br><span class="prob-lbl">Constraints:</span> DFS/BFS flood-fill; mark visited to avoid double counting.` },
+    { id:"gr2", title:"Course Schedule (Topological Sort)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given prerequisites pairs (a → b: must take b before a), can you finish all courses? (cycle detection in a directed graph)</span><br><span class="prob-lbl">Example:</span> numCourses=2, [[1,0]] → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> Kahn's algorithm (in-degree) or DFS with 3-colour visited state.` },
+    { id:"gr3", title:"Clone Graph", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> deep-copy a connected undirected graph given one node.</span><br><span class="prob-lbl">Example:</span> a 2-node connected graph → a fully independent copy.<br><span class="prob-lbl">Constraints:</span> DFS/BFS with an old→new map to avoid re-cloning nodes.` },
+    { id:"gr4", title:"Detect Cycle in an Undirected Graph", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> determine whether an undirected graph contains a cycle.</span><br><span class="prob-lbl">Example:</span> a triangle → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> union-find (DSU), or DFS keeping track of the parent (since undirected edges go both ways).` },
+    { id:"gr5", title:"Course Schedule II (Order)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return a valid order to finish all courses given prerequisites, or [] if impossible.</span><br><span class="prob-lbl">Example:</span> 4 courses, [[1,0],[2,0],[3,1],[3,2]] → <code>[0,2,1,3]</code> (or [0,1,2,3]).<br><span class="prob-lbl">Constraints:</span> Kahn's algorithm; the pop order from the in-degree-zero queue is one valid ordering.` },
+    { id:"gr6", title:"Graph Valid Tree", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given n nodes and edge list, check whether the graph is a valid tree (connected AND acyclic).</span><br><span class="prob-lbl">Example:</span> n=5, edges [[0,1],[0,2],[0,3],[1,4]] → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> union-find: a tree has exactly n−1 edges and no cycles.` },
+    { id:"gr7", title:"Number of Connected Components (Undirected)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> count connected components in an undirected graph.</span><br><span class="prob-lbl">Example:</span> n=5, edges [[0,1],[1,2],[3,4]] → <code>2</code>.<br><span class="prob-lbl">Constraints:</span> union-find, or DFS from each unvisited node.` },
+    { id:"gr8", title:"Pacific Atlantic Water Flow", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> cells in a grid where water can flow to BOTH the Pacific (top/left) and Atlantic (bottom/right) oceans; water only flows to cells of ≤ height.</span><br><span class="prob-lbl">Example:</span> <code>[[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]</code> → several cells.<br><span class="prob-lbl">Constraints:</span> two DFS flood-fills from the ocean borders, then intersect the reachable sets.` },
+    { id:"gr9", title:"Alien Dictionary", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given words sorted lexicographically by an unknown alphabet order, derive that order (or "" if impossible / cyclic).</span><br><span class="prob-lbl">Example:</span> <code>["wrt","wrf","er","ett","rftt"]</code> → <code>"wertf"</code>.<br><span class="prob-lbl">Constraints:</span> compare adjacent words; the first differing char gives an edge a→b; build a DAG, then topological sort. Watch prefix edge cases (e.g. "abc" after "ab" → invalid).` },
+    { id:"gr10", title:"Word Ladder", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> shortest transformation sequence from beginWord to endWord, changing one letter at a time, every intermediate word must be in wordList.</span><br><span class="prob-lbl">Example:</span> begin="hit", end="cog", list=["hot","dot","dog","lot","log","cog"] → <code>5</code> (hit→hot→dot→dog→cog).<br><span class="prob-lbl">Constraints:</span> BFS on a graph where words differ by one char; build an adjacency via wildcard patterns or 26-letter checks.` },
+    { id:"gr11", title:"Reconstruct Itinerary", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given flight tickets [from,to], reconstruct the itinerary in lexical order starting from "JFK" using every ticket exactly once.</span><br><span class="prob-lbl">Example:</span> <code>[["JFK","SFO"],["JFK","ATL"],["SFO","ATL"],["ATL","JFK"],["ATL","SFO"]]</code> → <code>["JFK","ATL","JFK","SFO","ATL","SFO"]</code>.<br><span class="prob-lbl">Constraints:</span> sort each node's adjacency in reverse order, then Hierholzer's algorithm — DFS post-order; the recursion stack reversal gives the path. O(E log E).` },
+    { id:"gr12", title:"Longest Increasing Path in a Matrix", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> length of the longest strictly increasing path in an m×n integer matrix moving up/down/left/right.</span><br><span class="prob-lbl">Example:</span> <code>[[9,9,4],[6,6,8],[2,1,1]]</code> → <code>4</code> (1→2→6→9).<br><span class="prob-lbl">Constraints:</span> DFS with memoization: path(i,j) = 1 + max over neighbours strictly greater. Each cell computed once → O(m·n).` },
+    { id:"gr13", title:"Network Delay Time (Dijkstra)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> signals propagate from source node k out along weighted edges (1 unit delay per edge). Find the minimum time for ALL nodes to receive the signal, or -1 if unreachable.</span><br><span class="prob-lbl">Example:</span> times=[[2,1,1],[2,3,1],[3,4,1]], n=4, k=2 → <code>2</code>.<br><span class="prob-lbl">Constraints:</span> Dijkstra with a min-heap (priority queue); take the max distance among all reachable nodes. O(E log V).` },
+    { id:"gr14", title:"Is Graph Bipartite?", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> can the graph's nodes be split into two groups such that no edge connects nodes within the same group (no odd-length cycle)?</span><br><span class="prob-lbl">Example:</span> graph [[1,3],[0,2],[1,3],[0,2]] → <code>true</code>; triangle → <code>false</code>.<br><span class="prob-lbl">Constraints:</span> BFS/DFS colouring with 2 colours; if a neighbour already has the same colour → not bipartite. Visit all components. O(V+E).` },
+    { id:"gr15", title:"Cheapest Flights Within K Stops (Bellman-Ford)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find the cheapest flight price from src to dst with at most k stops (edge-weighted directed graph), or -1.</span><br><span class="prob-lbl">Example:</span> flights=[[0,1,100],[1,2,100],[0,2,500]], src=0, dst=2, k=1 → <code>200</code>.<br><span class="prob-lbl">Constraints:</span> Bellman-Ford relaxed exactly k+1 times (copies of previous dist to avoid same-pass chaining); or Dijkstra with (city, stops) nodes. O(k·E).` },
+    { id:"gr16", title:"Find the City With the Smallest Number of Neighbors (Floyd-Warshall)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given weighted edges and a distance threshold, find the city from which the fewest cities are reachable within the threshold (break ties by largest city index).</span><br><span class="prob-lbl">Example:</span> n=4, edges=[[0,1,3],[1,2,1],[1,3,4],[2,3,1]], threshold=4 → <code>3</code>.<br><span class="prob-lbl">Constraints:</span> Floyd-Warshall all-pairs shortest paths O(n³), then count reachable per city.` }
+  ]},
+  { key:"recursion", name:"Recursion & Backtracking", problems:[
+    { id:"re1", title:"Subsets", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the power set (all subsets) of an array of distinct integers.</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3]</code> → <code>[[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]</code>.<br><span class="prob-lbl">Constraints:</span> backtracking (include/exclude each element) or iterative bitmask.` },
+    { id:"re2", title:"Permutations", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return all permutations of an array of distinct integers.</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3]</code> → 6 permutations.<br><span class="prob-lbl">Constraints:</span> backtracking; swap-based or used-array based.` },
+    { id:"re3", title:"N-Queens", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> place N queens on an N×N board so none attack each other; return all distinct solutions.</span><br><span class="prob-lbl">Example:</span> n=4 → 2 solutions.<br><span class="prob-lbl">Constraints:</span> backtracking row by row; track col + diagonal + anti-diagonal sets.` },
+    { id:"re4", title:"Combination Sum", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> all unique combinations of candidate numbers (can be reused) that exactly sum to target.</span><br><span class="prob-lbl">Example:</span> <code>[2,3,6,7]</code>, target 7 → <code>[[2,2,3],[7]]</code>.<br><span class="prob-lbl">Constraints:</span> backtracking; allow same index again but avoid going backwards to prevent duplicates.` },
+    { id:"re5", title:"Subsets II", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> power set of an array that may contain duplicates — return unique subsets only.</span><br><span class="prob-lbl">Example:</span> <code>[1,2,2]</code> → <code>[[],[1],[1,2],[1,2,2],[2],[2,2]]</code>.<br><span class="prob-lbl">Constraints:</span> sort first; at each level skip consecutive duplicates to avoid duplicate subsets.` },
+    { id:"re6", title:"Word Search", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> check if a word exists in a grid by moving up/down/left/right without reusing the same cell.</span><br><span class="prob-lbl">Example:</span> grid <code>[["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]]</code>, "ABCCED" → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> DFS + backtracking; mark cells visited temporarily.` },
+    { id:"re7", title:"Generate Parentheses", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> generate all well-formed parentheses combinations for n pairs.</span><br><span class="prob-lbl">Example:</span> n=3 → <code>["((()))","(()())","(())()","()(())","()()()"]</code>.<br><span class="prob-lbl">Constraints:</span> backtracking: add '(' when open < n, add ')' when close < open.` },
+    { id:"re8", title:"Letter Combinations of a Phone Number", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> map digits 2–9 to letters (phone keypad) and return all possible letter combinations.</span><br><span class="prob-lbl">Example:</span> <code>"23"</code> → <code>["ad","ae","af","bd","be","bf","cd","ce","cf"]</code>.<br><span class="prob-lbl">Constraints:</span> backtracking or recursion over each digit's letters.` },
+    { id:"re9", title:"Sudoku Solver", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> fill a partially filled 9×9 Sudoku board in-place such that every row, column, and 3×3 box has 1–9 exactly once.</span><br><span class="prob-lbl">Example:</span> a standard LeetCode hard board → solved board (theirs is guaranteed unique).<br><span class="prob-lbl">Constraints:</span> backtracking on the next empty cell; use bitmasks for rows/cols/boxes for O(1) validity checks, or boolean arrays. Prune hard.` },
+    { id:"re10", title:"Palindrome Partitioning", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> partition a string such that every substring is a palindrome; return all possible partitionings.</span><br><span class="prob-lbl">Example:</span> <code>"aab"</code> → <code>[["a","a","b"],["aa","b"]]</code>.<br><span class="prob-lbl">Constraints:</span> backtracking cutting at every index; precompute a palindrome DP table or use expansion checks to make pruning O(1).` },
+    { id:"re11", title:"Restore IP Addresses", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given a digit string, return all valid IPv4 addresses that can be formed by inserting dots (each part 0–255, no leading zeros unless the part is exactly "0").</span><br><span class="prob-lbl">Example:</span> <code>"25525511135"</code> → <code>["255.255.11.135","255.255.111.35"]</code>.<br><span class="prob-lbl">Constraints:</span> recursively place dots; keep only 1–3 digit segments that pass the validity rules.` },
+    { id:"re12", title:"Combination Sum II (no reuse)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> like Combination Sum but each candidate may be used only once; return all unique combinations summing to target.</span><br><span class="prob-lbl">Example:</span> <code>[10,1,2,7,6,1,5]</code>, target 8 → <code>[[1,1,6],[1,2,5],[1,7],[2,6]]</code>.<br><span class="prob-lbl">Constraints:</span> sort first; within the same recursion level skip consecutive equal values (start index must advance by 1).` }
+  ]},
+  { key:"dp", name:"Dynamic Programming", problems:[
+    { id:"dp1", title:"Climbing Stairs", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> ways to climb n stairs taking 1 or 2 steps at a time.</span><br><span class="prob-lbl">Example:</span> n=3 → <code>3</code> (1+1+1, 1+2, 2+1).<br><span class="prob-lbl">Constraints:</span> Fibonacci — ways(n) = ways(n−1) + ways(n−2); O(n) or O(1) space.` },
+    { id:"dp2", title:"Longest Common Subsequence", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> length of the longest subsequence common to two strings (order preserved, not necessarily contiguous).</span><br><span class="prob-lbl">Example:</span> <code>"abcde"</code>, <code>"ace"</code> → <code>3</code>.<br><span class="prob-lbl">Constraints:</span> 2D DP table; if chars match take diagonal+1 else max(up-left).` },
+    { id:"dp3", title:"0/1 Knapsack", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> maximize total value with total weight ≤ capacity, each item used at most once.</span><br><span class="prob-lbl">Example:</span> weights [1,3,4], values [15,20,30], capacity 4 → <code>35</code>.<br><span class="prob-lbl">Constraints:</span> 2D or 1D DP over capacity; iterate capacity downward when using 1D to avoid reuse.` },
+    { id:"dp4", title:"Coin Change (fewest coins)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> minimum number of coins (unlimited supply) to make an exact amount, or -1 if impossible.</span><br><span class="prob-lbl">Example:</span> coins [1,2,5], amount 11 → <code>3</code> (5+5+1).<br><span class="prob-lbl">Constraints:</span> DP: dp[a] = min(dp[a], dp[a−coin]+1); initialize to a large value.` },
+    { id:"dp5", title:"House Robber", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> max money to rob without robbing two adjacent houses.</span><br><span class="prob-lbl">Example:</span> <code>[2,7,9,3,1]</code> → <code>12</code> (2+9+1).<br><span class="prob-lbl">Constraints:</span> dp[i] = max(dp[i−1], dp[i−2]+nums[i]); O(n) time, O(1) space.` },
+    { id:"dp6", title:"Unique Paths", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> number of unique paths from top-left to bottom-right of an m×n grid moving only right/down.</span><br><span class="prob-lbl">Example:</span> m=3, n=7 → <code>28</code>.<br><span class="prob-lbl">Constraints:</span> dp[i][j] = dp[i−1][j] + dp[i][j−1]; can compress to 1D.` },
+    { id:"dp7", title:"Edit Distance", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> minimum number of insert/delete/replace operations to convert word1 into word2.</span><br><span class="prob-lbl">Example:</span> <code>"horse"</code> → <code>"ros"</code> = <code>3</code>.<br><span class="prob-lbl">Constraints:</span> 2D DP; DP[i][j] = min(match/diag, insert, delete).` },
+    { id:"dp8", title:"Longest Increasing Subsequence", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> length of the longest strictly increasing subsequence (not necessarily contiguous).</span><br><span class="prob-lbl">Example:</span> <code>[10,9,2,5,3,7,101,18]</code> → <code>4</code>.<br><span class="prob-lbl">Constraints:</span> O(n²) DP, or O(n log n) with a patience-sorting 'tails' array + binary search.` },
+    { id:"dp9", title:"Burst Balloons", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given balloon values, bursting balloon i gives coins[i−1]·coins[i]·coins[i+1] (hypothetical boundary balloons = 1). Max coins from bursting all.</span><br><span class="prob-lbl">Example:</span> <code>[3,1,5,8]</code> → <code>167</code>.<br><span class="prob-lbl">Constraints:</span> interval DP over which balloon pops LAST in a subarray: dp[l][r] = max(dp[l][k−1] + dp[k+1][r] + coins[l−1]·coins[k]·coins[r+1]). O(n³).` },
+    { id:"dp10", title:"Word Break", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> can the string s be segmented into space-separated words all present in a dictionary?</span><br><span class="prob-lbl">Example:</span> s="leetcode", dict=["leet","code"] → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> dp[i] = can s[0..i) be segmented; dp[j] true when dp[i] true and s[i..j) is a dictionary word. O(n²·L).` },
+    { id:"dp11", title:"Stone Game", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> two players take stones from either end of a row; total stones are odd so a winner exists. Determine whether the first player can win.</span><br><span class="prob-lbl">Example:</span> <code>[5,3,4,5]</code> → <code>true</code> (first can always win).<br><span class="prob-lbl">Constraints:</span> interval DP: dp[i][j] = max(stones[i] − dp[i+1][j], stones[j] − dp[i][j−1]) as the score difference; first wins if dp[0][n−1] > 0.` },
+    { id:"dp12", title:"Maximum Length of Repeated Subarray", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> length of the longest common SUBARRAY (contiguous, unlike subsequence) of two integer arrays.</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3,2,1]</code>, <code>[3,2,1,4,7]</code> → <code>3</code> ([3,2,1]).<br><span class="prob-lbl">Constraints:</span> 2D DP where dp[i][j] = dp[i−1][j−1] + 1 when equal, else resets to 0; track the global max. Can compress to 1D going backward.` },
+    { id:"dp13", title:"Best Time to Buy and Sell Stock with Cooldown", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> prices array; you may buy/sell but must wait 1 day of cooldown after selling before buying again (no holding multiple). Max profit.</span><br><span class="prob-lbl">Example:</span> <code>[1,2,3,0,2]</code> → <code>3</code> (buy@1, sell@2, cooldown, buy@0, sell@2).<br><span class="prob-lbl">Constraints:</span> state machine DP: hold[i], sold[i], rest[i] with transitions; or 1D rolling states. O(n).` },
+    { id:"dp14", title:"Unbounded Knapsack (complete knapsack)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> like 0/1 knapsack but each item can be used an UNLIMITED number of times. Maximize value under capacity.</span><br><span class="prob-lbl">Example:</span> weights [2,3,4], values [4,5,6], capacity 8 → <code>14</code> (two of weight-2 value-4 items → 8).<br><span class="prob-lbl">Constraints:</span> nearly identical to 0/1 but iterate capacity FORWARD when using 1D so items repeat: for w from weight[i] to capacity.` },
+    { id:"dp15", title:"Target Sum (count ways with + and −)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> assign each number a + or − sign so the sum equals a target; count the number of such assignments.</span><br><span class="prob-lbl">Example:</span> nums <code>[1,1,1,1,1]</code>, target 3 → <code>5</code>.<br><span class="prob-lbl">Constraints:</span> DP over (index, current sum) or reformulate as subset-sum ((total+target)/2 must be reachable); watch non-integer/sign edge cases.` },
+    { id:"dp16", title:"Minimum Path Sum (grid DP)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> m×n grid of non-negative numbers; find the minimum sum along a path from top-left to bottom-right moving only right or down.</span><br><span class="prob-lbl">Example:</span> <code>[[1,3,1],[1,5,1],[4,2,1]]</code> → <code>7</code> (1→3→1→1→1).<br><span class="prob-lbl">Constraints:</span> dp[i][j] = min(dp[i−1][j], dp[i][j−1]) + grid[i][j]; initialize first row/col accumulatively; O(m·n), can do in-place.` }
+  ]},
+  { key:"greedy", name:"Greedy", problems:[
+    { id:"gd1", title:"Merge Intervals", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> merge all overlapping intervals [start,end].</span><br><span class="prob-lbl">Example:</span> <code>[[1,3],[2,6],[8,10],[15,18]]</code> → <code>[[1,6],[8,10],[15,18]]</code>.<br><span class="prob-lbl">Constraints:</span> sort by start; merge when next.start ≤ current.end else push current.` },
+    { id:"gd2", title:"Jump Game", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> each element = max jump length from that index; can you reach the last index?</span><br><span class="prob-lbl">Example:</span> <code>[2,3,1,1,4]</code> → <code>true</code>; <code>[3,2,1,0,4]</code> → <code>false</code>.<br><span class="prob-lbl">Constraints:</span> greedily track the furthest reachable index = max(reach, i + nums[i]); if i > reach fail.` },
+    { id:"gd3", title:"Activity Selection / Non-overlapping Intervals", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given intervals, remove the minimum count so the rest don't overlap (equivalently, select max non-overlapping).</span><br><span class="prob-lbl">Example:</span> <code>[[1,2],[2,3],[3,4],[1,3]]</code> → remove <code>1</code> interval → <code>1</code>.</span><br><span class="prob-lbl">Constraints:</span> sort by end time and greedily keep intervals ending earliest.` },
+    { id:"gd4", title:"Gas Station", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> circular route with gas[i] and cost[i]; find the start station that lets you complete the circuit, else -1.</span><br><span class="prob-lbl">Example:</span> gas [1,2,3,4,5], cost [3,4,5,1,2] → <code>3</code>.<br><span class="prob-lbl">Constraints:</span> if total gas < total cost, impossible. Single pass: reset candidate start when running sum goes negative.` },
+    { id:"gd5", title:"Jump Game II", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> minimum number of jumps to reach the last index (you are always able to reach it).</span><br><span class="prob-lbl">Example:</span> <code>[2,3,1,1,4]</code> → <code>2</code>.<br><span class="prob-lbl">Constraints:</span> BFS-style greedy over jump "levels": count jumps when you pass the current max reach.` },
+    { id:"gd6", title:"Assign Cookies", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> greed factor per child, cookie size per cookie; each child gets at most one cookie ≥ their greed. Maximize happy children.</span><br><span class="prob-lbl">Example:</span> g [1,2,3], s [1,1] → <code>1</code>.<br><span class="prob-lbl">Constraints:</span> sort both, two pointers, assign smallest sufficient cookie.` },
+    { id:"gd7", title:"Min Arrows to Burst Balloons", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> balloons as [start,end]; one arrow pops all overlapping balloons at a point. Min arrows to burst all.</span><br><span class="prob-lbl">Example:</span> <code>[[10,16],[2,8],[1,6],[7,12]]</code> → <code>2</code>.<br><span class="prob-lbl">Constraints:</span> sort by end; shoot at each interval's end unless it overlaps the current burst range.` },
+    { id:"gd8", title:"Boats to Save People", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> each boat holds at most 2 people and a weight limit. Return the minimum number of boats.</span><br><span class="prob-lbl">Example:</span> <code>[3,2,2,1]</code>, limit 3 → <code>3</code> (pairs (1,2),(2),(3)).<br><span class="prob-lbl">Constraints:</span> sort; two pointers — pair the lightest with the heaviest if they fit, else the heavy one goes alone.` },
+    { id:"gd9", title:"Partition Labels", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> partition the string into as many parts as possible so each character appears in at most one part; return the part lengths.</span><br><span class="prob-lbl">Example:</span> <code>"ababcbacadefegdehijhklij"</code> → <code>[9,7,8]</code>.<br><span class="prob-lbl">Constraints:</span> record each char's last index; greedily extend the current segment boundary to max(last seen last-index) until i reaches the boundary.` },
+    { id:"gd10", title:"Queue Reconstruction by Height", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> people described as [height, k] where k = number of people in front with height ≥ theirs. Reconstruct the queue order.</span><br><span class="prob-lbl">Example:</span> <code>[[7,0],[4,4],[7,1],[5,0],[6,1],[5,2]]</code> → <code>[[5,0],[7,0],[5,2],[6,1],[4,4],[7,1]]</code>.<br><span class="prob-lbl">Constraints:</span> sort by height descending (k ascending), then INSERT each person at index k into the result list — pairs with fewer taller-in-front go earlier.` },
+    { id:"gd11", title:"Minimum Number of Platforms (Train Station)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given train arrival and departure times (HH:MM), find the minimum number of platforms needed so no train waits on the track.</span><br><span class="prob-lbl">Example:</span> arrivals <code>[900,940,950,1100,1500,1800]</code>, departures <code>[910,1200,1120,1130,1900,2000]</code> → <code>3</code>.<br><span class="prob-lbl">Constraints:</span> sort arrivals and departures separately, two pointers; increment when an arrival ≤ a departure, else pop the departure. O(n log n).` },
+    { id:"gd12", title:"Reduce Array Size to The Half", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> remove numbers from an array so that at least half the elements are gone; find the minimum count of distinct values to remove.</span><br><span class="prob-lbl">Example:</span> <code>[3,3,3,3,5,5,5,2,2,7]</code> → <code>2</code> (remove all 3s and 5s).<br><span class="prob-lbl">Constraints:</span> frequency map then sort descending; greedily pick the most frequent values until removed ≥ n/2.` }
+  ]},
+  { key:"bits", name:"Bit Manipulation", problems:[
+    { id:"bi1", title:"Single Number", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> every element appears twice except one; find it.</span><br><span class="prob-lbl">Example:</span> <code>[4,1,2,1,2]</code> → <code>4</code>.<br><span class="prob-lbl">Constraints:</span> XOR everything — pairs cancel. O(n) time, O(1) space.` },
+    { id:"bi2", title:"Counting Bits", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> for each i in 0..n, return the count of 1 bits in i's binary form, as an array.</span><br><span class="prob-lbl">Example:</span> n=5 → <code>[0,1,1,2,1,2]</code>.<br><span class="prob-lbl">Constraints:</span> DP: ans[i] = ans[i >> 1] + (i & 1).` },
+    { id:"bi3", title:"Power of Two", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> check if an integer is a power of two.</span><br><span class="prob-lbl">Example:</span> <code>1</code> → true; <code>16</code> → true; <code>18</code> → false.<br><span class="prob-lbl">Constraints:</span> n > 0 and (n & (n−1)) === 0.` },
+    { id:"bi4", title:"Number of 1 Bits (Hamming Weight)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> count the set bits (1s) in an unsigned integer's binary representation.</span><br><span class="prob-lbl">Example:</span> <code>11</code> (1011) → <code>3</code>.<br><span class="prob-lbl">Constraints:</span> O(k) with n & (n−1) clearing the lowest set bit each time.` },
+    { id:"bi5", title:"Missing Number (bitwise)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> array of n distinct numbers in [0,n]; find the missing one.</span><br><span class="prob-lbl">Example:</span> <code>[3,0,1]</code> → <code>2</code>.<br><span class="prob-lbl">Constraints:</span> XOR all indices and all values — the missing number remains. O(n) time, O(1) space.` },
+    { id:"bi6", title:"Reverse Bits", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> reverse the 32 bits of an unsigned integer.</span><br><span class="prob-lbl">Example:</span> <code>00000010100101000001111010011100</code> → reversed → <code>00111001011110000010100101000000</code>.<br><span class="prob-lbl">Constraints:</span> build the result bit by bit over 32 iterations.` },
+    { id:"bi7", title:"Sum of Two Integers (no +/-)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> add two integers WITHOUT using the + or - operators.</span><br><span class="prob-lbl">Example:</span> a=1, b=2 → <code>3</code>.<br><span class="prob-lbl">Constraints:</span> loop with XOR for sum and (a & b) << 1 for carry until carry is 0; mask to 32 bits.` },
+    { id:"bi8", title:"Single Number III", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> all numbers appear twice except TWO numbers that appear once; return both.</span><br><span class="prob-lbl">Example:</span> <code>[1,2,1,3,2,5]</code> → <code>[3,5]</code> (any order).<br><span class="prob-lbl">Constraints:</span> XOR all → xor of the two; pick any set bit to split the array into two groups and XOR each.` },
+    { id:"bi9", title:"Bitwise AND of Numbers Range", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the bitwise AND of all integers in the inclusive range [left, right].</span><br><span class="prob-lbl">Example:</span> left=5, right=7 → <code>4</code> (5&6&7).<br><span class="prob-lbl">Constraints:</span> the common prefix survives; repeatedly clear the rightmost set bit of the larger number until ≤ left — O(log right).` },
+    { id:"bi10", title:"UTF-8 Validation", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> an array of integers represents bytes of a UTF-8 string; determine whether the leading-byte and continuation-byte pattern is valid.</span><br><span class="prob-lbl">Example:</span> <code>[197,130,1]</code> → <code>true</code>; <code>[235,140,4]</code> → <code>false</code>.<br><span class="prob-lbl">Constraints:</span> inspect the highest bits; count expected continuation bytes by the leading byte's prefix pattern (0xxxxxxx, 110xxxxx, 1110xxxx, 11110xxx → 0,1,2,3 continuations).` },
+    { id:"bi11", title:"Power of Four", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> check whether an integer is a power of four (n = 4ᵏ).</span><br><span class="prob-lbl">Example:</span> <code>16</code> → <code>true</code>; <code>8</code> → <code>false</code>.<br><span class="prob-lbl">Constraints:</span> power of two (n & (n−1)) === 0 AND its single set bit is at an even index: (n & 0x55555555) !== 0, or n % 3 === 1.` },
+    { id:"bi12", title:"Binary Tree XOR Path Counts (via bitset)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> in a binary tree of values, find the number of root-to-leaf paths where some reordering of node values makes a palindrome (i.e., at most one value has odd count).</span><br><span class="prob-lbl">Example:</span> root 2 → 3 → 3 (and 2 → 1 → 1) → <code>2</code> paths (pseudo-palindromic).<br><span class="prob-lbl">Constraints:</span> DFS with a bitmask toggle per value (x ^= 1 << val); a path qualifies when the mask has at most one set bit — check via mask & (mask − 1). O(n).` }
+  ]},
+  { key:"trie", name:"Trie", problems:[
+    { id:"ti1", title:"Implement Trie (Insert / Search / StartsWith)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> implement a trie with insert(word), search(word), and startsWith(prefix).</span><br><span class="prob-lbl">Example:</span> insert("apple") → search("apple")=true, search("app")=false, startsWith("app")=true.<br><span class="prob-lbl">Constraints:</span> each node = array/map of 26 children + an isEnd flag; O(L) for every operation where L = word length.` },
+    { id:"ti2", title:"Design Add and Search Words (wildcard '.')", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> support addWord(word) and search(word) where '.' matches any single letter (regex-like, must match full word).</span><br><span class="prob-lbl">Example:</span> addWord("bad"), addWord("dad"), search("pad")=false, search(".ad")=true, search("b..")=true.<br><span class="prob-lbl">Constraints:</span> trie + DFS; on '.' try all 26 children and recurse. Worst case O(26^L) but fast in practice.` },
+    { id:"ti3", title:"Word Search II (trie + grid DFS)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given an m×n board of letters and a list of words, find all words on the board (adjacent cells, no cell reused per word).</span><br><span class="prob-lbl">Example:</span> board <code>[[o,a,a,n],[e,t,a,e],[i,h,k,r],[i,f,l,v]]</code>, words=["oath","pea","eat","rain"] → <code>["oath","eat"]</code>.<br><span class="prob-lbl">Constraints:</span> build a trie of the words, DFS from every cell following trie children; prune by removing matched words/cells. Faster than checking each word separately.` },
+    { id:"ti4", title:"Maximum XOR of Two Numbers in an Array", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find the maximum XOR of any two numbers in a non-empty array.</span><br><span class="prob-lbl">Example:</span> <code>[3,10,5,25,2,8]</code> → <code>28</code> (5 XOR 25).<br><span class="prob-lbl">Constraints:</span> insert all numbers' bits into a binary trie; for each number, greedily follow the OPPOSITE bit to maximize XOR. O(32·n).` },
+    { id:"ti5", title:"Longest Word in Dictionary (by letters)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return the longest word that can be built one character at a time from other words in the list (each prefix must exist).</span><br><span class="prob-lbl">Example:</span> <code>["w","wo","wor","worl","world"]</code> → <code>"world"</code>.<br><span class="prob-lbl">Constraints:</span> sort, or trie + DFS marking words whose every ancestor node is a word; tie-break by lexicographic order.` },
+    { id:"ti6", title:"Replace Words (trie root matching)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> given a dictionary of roots and a sentence, replace each word's longest prefix with its root when the prefix is in the dictionary; else keep the word.</span><br><span class="prob-lbl">Example:</span> roots <code>["cat","bat","rat"]</code>, sentence "the cattle was rattled by the battery" → "the cat was rat by the bat".<br><span class="prob-lbl">Constraints:</span> insert roots into a trie; walk each word and cut at the first isEnd node (shortest root wins).` },
+    { id:"ti7", title:"Palindrome Pairs (trie-based)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find all pairs (i, j) such that words[i] + words[j] forms a palindrome.</span><br><span class="prob-lbl">Example:</span> <code>["abcd","dcba","lls","s","sssll"]</code> → <code>[[0,1],[1,0],[3,2],[2,4]]</code>.<br><span class="prob-lbl">Constraints:</span> build/reverse trie storing indices; for each word check reversed prefixes + palindrome suffixes/prefixes. O(n·k²). Careful with self-matches and empty string.` },
+    { id:"ti8", title:"Design Search Autocomplete System", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> design a system that receives characters one at a time, tracks frequencies of sentences, and returns the top-3 hottest sentences matching the typed prefix.</span><br><span class="prob-lbl">Example:</span> after recording "i love you" (high freq), typing "i" suggests the matching sentences ranked by frequency then lexicographically.<br><span class="prob-lbl">Constraints:</span> trie per prefix storing child nodes + frequency maps, or maintain a sorted frequency structure; DFS to collect candidates.` }
+  ]},
+  { key:"unionfind", name:"Union-Find (DSU)", problems:[
+    { id:"uf1", title:"Number of Provinces", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> n cities with a direct-flight adjacency matrix; cities in the same connected component form one province. Count the provinces.</span><br><span class="prob-lbl">Example:</span> <code>[[1,1,0],[1,1,0],[0,0,1]]</code> → <code>2</code>.<br><span class="prob-lbl">Constraints:</span> union-find over n nodes; count distinct roots (with path compression). O(n²) building, near-O(1) per union/find.` },
+    { id:"uf2", title:"Redundant Connection", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> an undirected graph that is a tree plus one extra edge. Return the edge that, when removed, makes it a valid tree (prefer the later edge in input order).</span><br><span class="prob-lbl">Example:</span> edges [[1,2],[1,3],[2,3]] → <code>[2,3]</code>.<br><span class="prob-lbl">Constraints:</span> union-find; when an edge's two endpoints are ALREADY in the same set, that edge is redundant → return it.` },
+    { id:"uf3", title:"Accounts Merge", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> list of accounts with name + emails; merge accounts belonging to the same person (shared email), sorted emails per person.</span><br><span class="prob-lbl">Example:</span> John has [email1,email2] and [email1,email3] → merged into one account with 3 emails.<br><span class="prob-lbl">Constraints:</span> map email → account index, union accounts that share an email; then group emails per root and sort.` },
+    { id:"uf4", title:"Number of Islands II (online additions)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> start with an all-water m×n grid; land positions are added one by one. After each add, return the current number of islands (4-directionally connected land).</span><br><span class="prob-lbl">Example:</span> m=3,n=3, positions [[0,0],[0,1],[1,2],[2,1]] → <code>[1,1,2,3]</code>.<br><span class="prob-lbl">Constraints:</span> union-find on grid indices; on each add, union with any existing land neighbour and decrement count on each successful merge.` },
+    { id:"uf5", title:"Smallest String With Swaps", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> you may swap characters at the given (i, j) pairs any number of times. Return the lexicographically smallest string reachable.</span><br><span class="prob-lbl">Example:</span> s="dcab", pairs [[0,3],[1,2]] → <code>"bacd"</code>.<br><span class="prob-lbl">Constraints:</span> union-find connects swappable indices; each component's characters can be reordered freely → collect and sort per component, place back.` },
+    { id:"uf6", title:"Satisfiability of Equality Equations", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> equations like "a==b" or "a!=b" over variable names a–z; determine if all equations can be true simultaneously.</span><br><span class="prob-lbl">Example:</span> <code>["a==b","b!=c","c==a"]</code> → <code>false</code>; <code>["c==c","b==d","x!=z"]</code> → <code>true</code>.<br><span class="prob-lbl">Constraints:</span> first union all "==" variables, then verify every "!=" pair is NOT in the same set. 26 nodes.` },
+    { id:"uf7", title:"Most Stones Removed with Same Row or Column", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> stones on a grid; you may remove a stone if another stone shares its row or column. Max stones you can remove.</span><br><span class="prob-lbl">Example:</span> <code>[[0,0],[0,1],[1,0],[1,2],[2,1],[2,2]]</code> → <code>5</code>.<br><span class="prob-lbl">Constraints:</span> union rows and columns into one DSU (offset columns by +10001); answer = stones − connectedComponents.` },
+    { id:"uf8", title:"Making A Large Island", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> 0/1 grid; you may flip at most one 0 to 1. Find the largest island (connected 1s) after that single flip.</span><br><span class="prob-lbl">Example:</span> <code>[[1,0],[0,1]]</code> → <code>3</code>; <code>[[1,1],[1,0]]</code> → <code>4</code>.<br><span class="prob-lbl">Constraints:</span> union-find to give each island a root + size; for each 0, sum sizes of distinct neighbouring components +1; answer = max. Handle all-1s grid (max = n²).` }
+  ]},
+  { key:"slidingwindow", name:"Sliding Window & Two Pointers", problems:[
+    { id:"sw1", title:"Minimum Size Subarray Sum", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> in an array of positives, find the minimal-length contiguous subarray whose sum ≥ target.</span><br><span class="prob-lbl">Example:</span> <code>[2,3,1,2,4,3]</code>, target 7 → <code>2</code> ([4,3]).<br><span class="prob-lbl">Constraints:</span> sliding window; grow right, shrink left while sum ≥ target, tracking min length. O(n) since only positives guarantee shrink works.` },
+    { id:"sw2", title:"Longest Repeating Character Replacement", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> a string and k; you may replace at most k characters. Find the longest substring that can become all one letter.</span><br><span class="prob-lbl">Example:</span> s="ABAB", k=2 → <code>4</code>; s="AABABBA", k=1 → <code>4</code>.<br><span class="prob-lbl">Constraints:</span> sliding window where (windowLen − maxFreq) ≤ k; <code>maxFreq</code> is the most frequent char in-window; shrink otherwise. O(n)·26.` },
+    { id:"sw3", title:"Fruit Into Baskets (max 2 distinct)", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> pick the longest contiguous stretch of trees where you collect at most 2 types of fruit (2 baskets, one type each).</span><br><span class="prob-lbl">Example:</span> <code>[1,2,1]</code> → <code>3</code>; <code>[3,3,3,1,2,1,1,2,3,3,4]</code> → <code>5</code>.<br><span class="prob-lbl">Constraints:</span> sliding window with a frequency map; when distinct types > 2 shrink left until ≤ 2.` },
+    { id:"sw4", title:"Max Consecutive Ones III", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> binary array; flip at most k zeros to ones. Longest run of consecutive 1s.</span><br><span class="prob-lbl">Example:</span> <code>[1,1,1,0,0,0,1,1,1,1,0]</code>, k=2 → <code>6</code>.<br><span class="prob-lbl">Constraints:</span> sliding window counting zeros; shrink left when zeros > k. O(n).` },
+    { id:"sw5", title:"Permutation in String", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> does s2 contain a substring that is a permutation of s1?</span><br><span class="prob-lbl">Example:</span> s1="ab", s2="eidbaooo" → <code>true</code> ("ba"); s2="eidboaoo" → <code>false</code>.<br><span class="prob-lbl">Constraints:</span> fixed-size window of length |s1|; compare frequency counts (or a "matches" counter of how many char counts align). O(|s1|+|s2|).` },
+    { id:"sw6", title:"Find All Anagrams in a String", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> return all start indices where a substring of s is an anagram of p.</span><br><span class="prob-lbl">Example:</span> s="cbaebabacd", p="abc" → <code>[0,6]</code>.<br><span class="prob-lbl">Constraints:</span> fixed window (len p) scanning s; maintain freq diff + matched-count; anagram when matched == 26. O(n).` },
+    { id:"sw7", title:"Number of Subarrays with Product Less Than K", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> count contiguous subarrays whose product is strictly less than k.</span><br><span class="prob-lbl">Example:</span> <code>[10,5,2,6]</code>, k=100 → <code>8</code>.<br><span class="prob-lbl">Constraints:</span> sliding window product; when product ≥ k divide out the left. New subarrays ending at right = (right − left + 1). O(n).` },
+    { id:"sw8", title:"Shortest Subarray with Sum at Least K", statement:`<span class="prob-item"><span class="prob-lbl">Problem:</span> find the minimal-length subarray with sum ≥ k. NOTE: array can contain NEGATIVES, so the basic two-pointer fails.</span><br><span class="prob-lbl">Example:</span> <code>[2,-1,2]</code>, k=3 → <code>3</code> (whole array); <code>[1]</code>, k=1 → <code>1</code>.<br><span class="prob-lbl">Constraints:</span> prefix-sum array + MONOTONIC deque of indices; pop from back while prefix[back] ≥ prefix[i] (keeps increasing), pop front when prefix[i] − prefix[front] ≥ k. O(n).` }
+  ]}
+];
+
+const TOTAL_PROBLEMS = topics.reduce((n,t)=>n+t.problems.length, 0);
+const problemIndex = {};
+topics.forEach(t => t.problems.forEach(p => { problemIndex[p.id] = { ...p, topicName:t.name }; }));
+
+/* ============ STATE ============ */
+
+const STORAGE_KEY = "dsa_practice_progress_v1";
+
+let progress = {
+  solved: {},
+  code: {},
+  chats: {},
+  reviews: {},
+  model: "openai/gpt-4o-mini",
+  language: "Python"
+};
+
+let apiKey = "";
+try { apiKey = sessionStorage.getItem("dsa_openrouter_key") || ""; } catch (e) { }
+let activeTopic = topics[0].key;
+let expanded = new Set();
+let reviewLoading = new Set();
+let resumeBannerDismissed = false;
+let progressLoaded = false;
+
+/* ============ STORAGE (localStorage — same browser, resumes across sessions) ============ */
+
+function loadProgressSync(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const parsed = JSON.parse(raw);
+    progress = Object.assign({ solved:{}, code:{}, chats:{}, reviews:{}, model: progress.model, language: progress.language }, parsed);
+    return true;
+  }catch(e){ }
+  return false;
+}
+
+function saveProgress(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  }catch(e){ console.error("Could not save progress:", e); }
+}
+
+function clearProgress(){
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){ }
+  progress = { solved:{}, code:{}, chats:{}, reviews:{}, model: progress.model, language: progress.language };
+}
+
+/* ============ HELPERS ============ */
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+}
+
+function solvedCount(){
+  return Object.values(progress.solved).filter(Boolean).length;
+}
+function solvedCountForTopic(topic){
+  return topic.problems.filter(p => progress.solved[p.id]).length;
+}
+
+/* ============ RENDER: RAIL ============ */
+
+function renderRail(){
+  document.getElementById("progressText").innerHTML = `<b>${solvedCount()}</b>/${TOTAL_PROBLEMS} solved`;
+  document.getElementById("progressBar").style.width = Math.round((solvedCount()/TOTAL_PROBLEMS)*100) + "%";
+
+  const catList = document.getElementById("catList");
+  catList.innerHTML = "";
+  topics.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "cat-item" + (t.key === activeTopic ? " active" : "");
+    div.innerHTML = `<span>${t.name}</span><span class="cat-count">${solvedCountForTopic(t)}/${t.problems.length}</span>`;
+    div.addEventListener("click", () => { activeTopic = t.key; renderAll(); });
+    catList.appendChild(div);
+  });
+}
+
+/* ============ RENDER: MAIN ============ */
+
+function renderMain(){
+  const topic = topics.find(t => t.key === activeTopic);
+  const main = document.getElementById("main");
+
+  let resumeBanner = "";
+  if(!resumeBannerDismissed && solvedCount() > 0){
+    resumeBanner = `<div class="banner">
+      <span><b>Welcome back —</b> you've already solved ${solvedCount()}/${TOTAL_PROBLEMS} problems. Pick up where you left off.</span>
+      <button class="btn-ghost" id="dismissResumeBtn">Got it</button>
+    </div>`;
+  }
+
+  main.innerHTML = `
+    <div class="top-controls">
+      <div class="row">
+        <div>
+          <label class="field-label">OpenRouter API key (pre-filled, session only)</label>
+          <input type="password" id="apiKeyInput" placeholder="sk-or-v1-..." value="${apiKey}">
+        </div>
+        <div>
+          <label class="field-label">Model</label>
+          <select id="modelSelect">
+            <option value="openai/gpt-4o-mini">GPT-4o mini</option>
+            <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
+            <option value="liquid/lfm-2.5-2.6b:free">Liquid LFM 2.6B (free)</option>
+            <option value="nvidia/nemotron-3-super-120b-a12b:free">Nemotron 120B (free)</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Code language</label>
+          <select id="langSelect">
+            <option>Python</option>
+            <option>C++</option>
+            <option>Java</option>
+            <option>C</option>
+            <option>JavaScript</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint">Step 1: describe your approach in a problem's chat box → AI generates code. Step 2: paste/refine your final code. Step 3: click "Mark as solved" → the AI reviews your logic, finds every mistake, checks edge cases and complexity, and shows you exactly what to fix. Progress persists in this browser; your key is never stored in localStorage.</div>
+    </div>
+
+    ${resumeBanner}
+
+    <h1 class="page-title">${topic.name}</h1>
+    <div class="page-sub">${solvedCountForTopic(topic)} of ${topic.problems.length} solved in this topic. Click a problem to open its workspace.</div>
+
+    <div id="problemList"></div>
+  `;
+
+  document.getElementById("apiKeyInput").addEventListener("input", e => { apiKey = e.target.value; try { sessionStorage.setItem("dsa_openrouter_key", apiKey); } catch (err) { } });
+  document.getElementById("modelSelect").value = progress.model;
+  document.getElementById("modelSelect").addEventListener("change", e => { progress.model = e.target.value; saveProgress(); });
+  document.getElementById("langSelect").value = progress.language;
+  document.getElementById("langSelect").addEventListener("change", e => { progress.language = e.target.value; saveProgress(); });
+
+  const dismissBtn = document.getElementById("dismissResumeBtn");
+  if(dismissBtn) dismissBtn.addEventListener("click", () => { resumeBannerDismissed = true; renderMain(); });
+
+  const list = document.getElementById("problemList");
+  topic.problems.forEach(p => list.appendChild(buildProblemCard(p)));
+}
+
+function renderReviewBox(p){
+  if(reviewLoading.has(p.id)){
+    return `<div class="review-box"><b>AI code review in progress…</b><div class="hint" style="margin-top:4px;">Sending your code to ${progress.model} — checking logic, edge cases, and complexity. Takes ~15–40 seconds.</div></div>`;
+  }
+  const fb = progress.reviews[p.id];
+  if(!fb) return "";
+  const m = fb.match(/^\s*\[(CORRECT|NEEDS FIXES|ERROR)\]/i);
+  const verdict = m ? m[1].toUpperCase() : "";
+  const cls = verdict === "CORRECT" ? "ok" : "bad";
+  return `<div class="review-box review-${cls}">
+    <b>AI review of your code</b>
+    <pre class="review-text">${escapeHtml(fb)}</pre>
+  </div>`;
+}
+
+function buildProblemCard(p){
+  const wrap = document.createElement("div");
+  wrap.className = "problem-card";
+  const isSolved = !!progress.solved[p.id];
+  const isOpen = expanded.has(p.id);
+
+  const head = document.createElement("div");
+  head.className = "problem-head";
+  head.innerHTML = `
+    <span class="problem-title"><span class="solved-dot ${isSolved?"done":""}"></span>${p.title}</span>
+    <span class="problem-toggle">${isOpen ? "Hide ▲" : "Open ▼"}</span>
+  `;
+  head.addEventListener("click", () => {
+    if(expanded.has(p.id)) expanded.delete(p.id); else expanded.add(p.id);
+    renderMain();
+  });
+  wrap.appendChild(head);
+
+  if(isOpen){
+    const body = document.createElement("div");
+    body.className = "problem-body";
+
+    const chat = (progress.chats[p.id] || []);
+    const chatHtml = chat.length
+      ? chat.map(m => `<div class="msg ${m.role==="user"?"user":"assistant"}">${escapeHtml(m.content)}</div>`).join("")
+      : `<div class="msg note">Describe your approach — data structure, algorithm idea, complexity target — and the assistant will generate code.</div>`;
+
+    const hasReview = progress.reviews[p.id] && !reviewLoading.has(p.id);
+
+    body.innerHTML = `
+      <div class="problem-statement">${p.statement}</div>
+      <div class="chat-box" id="chat-${p.id}">${chatHtml}</div>
+      <div class="prompt-row">
+        <textarea id="prompt-${p.id}" placeholder="e.g. I'll use a hash map to store value→index while scanning once, so lookups for the complement are O(1) — overall O(n) time, O(n) space."></textarea>
+        <button class="btn-primary" id="send-${p.id}">Send</button>
+      </div>
+      <div class="code-box">
+        <label class="field-label">Your final code</label>
+        <textarea id="code-${p.id}" style="min-height:120px;">${progress.code[p.id] || ""}</textarea>
+      </div>
+      ${renderReviewBox(p)}
+      <div class="btn-row">
+        <button class="btn-danger-ghost" id="retake-${p.id}">Retake this problem</button>
+        ${hasReview ? `<button class="btn-ghost" id="recheck-${p.id}">Re-check code</button>` : ""}
+        <button class="btn-solve ${isSolved?"done":""}" id="solve-${p.id}">${isSolved ? "✓ Solved — click to unmark" : "Mark as solved (AI checks code)"}</button>
+      </div>
+    `;
+    wrap.appendChild(body);
+
+    setTimeout(() => wireProblemEvents(p), 0);
+  }
+
+  return wrap;
+}
+
+function wireProblemEvents(p){
+  const chatBoxEl = document.getElementById(`chat-${p.id}`);
+  if(chatBoxEl) chatBoxEl.scrollTop = chatBoxEl.scrollHeight;
+
+  const codeEl = document.getElementById(`code-${p.id}`);
+  if(codeEl){
+    codeEl.addEventListener("input", e => {
+      progress.code[p.id] = e.target.value;
+      saveProgress();
+    });
+  }
+
+  const solveBtn = document.getElementById(`solve-${p.id}`);
+  if(solveBtn){
+    solveBtn.addEventListener("click", () => {
+      if(progress.solved[p.id]){
+        progress.solved[p.id] = false;
+        saveProgress();
+        renderAll();
+        return;
+      }
+      runReview(p, true);
+    });
+  }
+
+  const recheckBtn = document.getElementById(`recheck-${p.id}`);
+  if(recheckBtn){
+    recheckBtn.addEventListener("click", () => runReview(p, false));
+  }
+
+  const retakeBtn = document.getElementById(`retake-${p.id}`);
+  if(retakeBtn){
+    retakeBtn.addEventListener("click", () => {
+      if(!confirm(`Clear your saved code, chat, review, and solved status for "${p.title}"?`)) return;
+      delete progress.code[p.id];
+      delete progress.chats[p.id];
+      delete progress.reviews[p.id];
+      delete progress.solved[p.id];
+      saveProgress();
+      renderAll();
+    });
+  }
+
+  const sendBtn = document.getElementById(`send-${p.id}`);
+  if(sendBtn){
+    sendBtn.addEventListener("click", () => sendApproach(p));
+  }
+}
+
+/* ============ AI: GENERATE CODE FROM YOUR APPROACH ============ */
+
+async function sendApproach(p){
+  const promptEl = document.getElementById(`prompt-${p.id}`);
+  const text = promptEl.value.trim();
+  if(!text) return;
+  if(!apiKey){
+    alert("Enter your OpenRouter API key at the top of the page first.");
+    return;
+  }
+
+  if(!progress.chats[p.id]) progress.chats[p.id] = [];
+  progress.chats[p.id].push({ role:"user", content:text });
+  promptEl.value = "";
+  saveProgress();
+  renderMain();
+
+  const chatBoxEl = document.getElementById(`chat-${p.id}`);
+  const thinkingDiv = document.createElement("div");
+  thinkingDiv.className = "msg assistant";
+  thinkingDiv.textContent = "Thinking...";
+  if(chatBoxEl){ chatBoxEl.appendChild(thinkingDiv); chatBoxEl.scrollTop = chatBoxEl.scrollHeight; }
+
+  const sendBtn = document.getElementById(`send-${p.id}`);
+  if(sendBtn) sendBtn.disabled = true;
+
+  try{
+    const systemMsg = `You are a coding assistant helping a candidate practice the DSA problem "${p.title}" (topic: ${problemIndex[p.id].topicName}).
+Problem statement: ${p.statement.replace(/<[^>]+>/g," ")}
+The candidate will describe their approach in plain words. Your ONLY job is to turn THEIR approach into clean, correct, well-commented ${progress.language} code following their exact plan and naming — do NOT silently replace it with the textbook/standard solution. If their approach is wrong or has a flaw, explain exactly why in 2-3 sentences and ask how they want to adjust, then wait — do not write the standard answer without their approval. If their approach is good, write the code that implements exactly what they described, step by step. Always end with the time and space complexity of their approach.`;
+
+    const messages = [
+      { role:"system", content: systemMsg },
+      ...progress.chats[p.id].map(m => ({ role:m.role, content:m.content }))
+    ];
+    const reply = await callOpenRouter(apiKey, progress.model, messages, 2000);
+    thinkingDiv.textContent = reply;
+    progress.chats[p.id].push({ role:"assistant", content:reply });
+    saveProgress();
+  }catch(err){
+    thinkingDiv.textContent = "Error: " + err.message;
+    progress.chats[p.id].push({ role:"assistant", content:"Error: " + err.message });
+  }finally{
+    if(sendBtn) sendBtn.disabled = false;
+    renderMain();
+  }
+}
+
+/* ============ AI: THOROUGH CODE REVIEW ON "MARK AS SOLVED" ============ */
+
+async function runReview(p, markSolved){
+  const code = progress.code[p.id] || "";
+  if(!code.trim()){
+    alert("Paste your final code in the 'Your final code' box first — the AI needs your code to review it.");
+    return;
+  }
+  reviewLoading.add(p.id);
+  renderAll();
+  try{
+    progress.reviews[p.id] = await reviewCode(p, code);
+  }catch(err){
+    progress.reviews[p.id] = "[ERROR] Review failed: " + err.message;
+  }finally{
+    reviewLoading.delete(p.id);
+    if(markSolved) progress.solved[p.id] = true;
+    saveProgress();
+    renderAll();
+  }
+}
+
+async function reviewCode(p, code){
+  if(!apiKey){ throw new Error("OpenRouter API key missing — enter it at the top of the page."); }
+  const lang = progress.language;
+  const problem = problemIndex[p.id];
+  const approach = (progress.chats[p.id] || []).filter(m=>m.role==="user").map(m=>m.content).join(" || ");
+
+  const systemMsg = `You are a strict but fair senior coding interviewer conducting a code review. Verify EVERYTHING in the candidate's solution — not just whether it happens to work on a sample, but whether the logic is truly correct for all inputs.
+
+PROBLEM: ${p.title} (topic: ${problem.topicName})
+${p.statement.replace(/<[^>]+>/g," ")}
+
+Candidate's declared approach: ${approach || "(none given — judge the code on its own)"}
+
+Candidate's code in ${lang}:
+${code}
+
+Review every layer of the code and produce EXACTLY this structure starting with the verdict on the very first line:
+[CORRECT] or [NEEDS FIXES]
+
+1. LOGIC & CORRECTNESS — line-by-line. Does the algorithm actually solve the problem? Trace it mentally on at least two inputs including an edge case. Point out any off-by-one error, wrong condition, bad boundary handling, or silently-wrong output with the exact line/problematic part quoted.
+2. EDGE CASES — empty input, single element, all-equal values, negatives, zeros, large n (overflow), duplicates, and any input the problem's constraints allow. Which ones does the code mishandle?
+3. COMPLEXITY — actual time and space complexity of this code vs what the problem expects (e.g. O(n) expected but this is O(n²)). Quote it precisely.
+4. LANGUAGE / SYNTAX issues in ${lang} if any.
+5. VERDICT — one line: is the solution acceptable as final, or what MUST be fixed before submission?
+
+Be specific, reference the candidate's actual code, and do not invent problems that don't exist — if the code is fully correct, say [CORRECT] clearly at the top and say what is done well.`;
+
+  const messages = [
+    { role:"system", content: systemMsg },
+    { role:"user", content: `Review my ${lang} code for "${p.title}" and tell me exactly what is wrong and what to fix before I submit it.` }
+  ];
+  return await callOpenRouter(apiKey, progress.model, messages, 1800);
+}
+
+/* ============ API CALL ============ */
+
+async function callOpenRouter(key, model, messages, maxTokens){
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer " + key,
+      "HTTP-Referer":"https://claude.ai",
+      "X-Title":"DSA Practice Console (Capgemini Paper 6)"
+    },
+    body: JSON.stringify({ model, messages, max_tokens: maxTokens || 1500, temperature: 0.3 })
+  });
+  const data = await res.json();
+  if(data.error){ throw new Error(data.error.message || "API error"); }
+  if(!data.choices || !data.choices[0]){ throw new Error("No response from model."); }
+  return data.choices[0].message.content;
+}
+
+/* ============ RENDER ALL ============ */
+
+function renderAll(){
+  renderRail();
+  renderMain();
+}
+
+/* ============ RETAKE ALL ============ */
+
+document.getElementById("retakeAllBtn").addEventListener("click", () => {
+  if(!confirm("This clears ALL solved status, saved code, chats, and reviews for every problem. Continue?")) return;
+  clearProgress();
+  expanded.clear();
+  reviewLoading.clear();
+  resumeBannerDismissed = false;
+  renderAll();
+});
+
+/* ============ INIT ============ */
+
+(function init(){
+  document.getElementById("main").innerHTML = `<div class="hint" style="padding:20px;">Loading your saved progress…</div>`;
+  loadProgressSync();
+  progressLoaded = true;
+  renderAll();
+})();
+</script>
+</body>
+</html>

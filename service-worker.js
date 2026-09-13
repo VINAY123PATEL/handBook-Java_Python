@@ -1,12 +1,16 @@
-var CACHE = 'dsa-hub-v12';
+var CACHE = 'dsa-hub-v13';
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(CACHE).then(function (cache) {
       return cache.addAll([
         './index.html',
+        './login.html',
+        './codingPrac.html',
+        './DSA-Hub.html',
         './rosetta-dsa.html',
         './leetcode-200.html',
+        './firebase-config.js',
         './icon-192.png',
         './icon-512.png',
         './pdfs/DSA_Complete_Notes.pdf',
@@ -15,7 +19,8 @@ self.addEventListener('install', function (event) {
         './pdfs/OS_Complete_Notes.pdf',
         './pdfs/COA_Complete_Notes.pdf',
         './pdfs/DBMS_Complete_Notes.pdf',
-        './pdfs/CN_Complete_Notes.pdf'
+        './pdfs/CN_Complete_Notes.pdf',
+        './pdfs/Cyber_Security_Complete_Notes.pdf'
       ]);
     })
   );
