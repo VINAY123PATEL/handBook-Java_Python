@@ -20,14 +20,14 @@
     { min: 17000, title: "DSA God", icon: "\uD83C\uDFC6" },
     { min: 22000, title: "Legend", icon: "\uD83D\uDC32" }
   ];
-  var TOPIC_TIERS = [
-    { key: "start", label: "1 Solve", icon: "\uD83C\uDFAF" },
-    { key: "easy", label: "Easy Cleared", icon: "\uD83D\uDCD7" },
-    { key: "medium", label: "Medium Cleared", icon: "\uD83E\uDD48" },
-    { key: "hard", label: "Hard Cleared", icon: "\uD83E\uDD47" },
-    { key: "master", label: "Topic Master", icon: "\uD83D\uDC51" }
+  var TOPIC_ICONS = [
+    "\uD83D\uDCD6", "\uD83D\uDD0D", "\uD83C\uDF82", "\uD83D\uDCC4", "\uD83D\uDCE6",
+    "\uD83D\uDD17", "\uD83E\uDD80", "\uD83C\uDF32", "\uD83C\uDFD9", "\uD83E\uDDED",
+    "\uD83D\uDD04", "\uD83E\uDDEE", "\uD83D\uDC62", "\uD83E\uDDE0", "\uD83D\uDDA5",
+    "\uD83D\uDE90", "\uD83C\uDFB4"
   ];
-  var TIER_BONUS = { easy: 15, medium: 20, hard: 25, master: 50 };
+  var TOPIC_BADGE_TARGET = 0.5;
+  function topicIcon(key, index) { return TOPIC_ICONS[Math.abs((index == null ? 0 : index)) % TOPIC_ICONS.length]; }
   var BADGES = {
     "first-solve": "\uD83C\uDFAF",
     "solved-5": "\uD83E\uDDE9",
@@ -139,14 +139,18 @@
     return t;
   }
 
-  function tiersEarned(t) {
-    var got = [];
-    if (t.n >= 1) got.push("start");
-    if (t.te > 0 && t.e >= t.te) got.push("easy");
-    if (t.tm > 0 && t.m >= t.tm) got.push("medium");
-    if (t.th > 0 && t.h >= t.th) got.push("hard");
-    if (t.n >= 1 && (t.te + t.tm + t.th) > 0 && t.e >= t.te && t.m >= t.tm && t.h >= t.th) got.push("master");
-    return got;
+  function topicTarget(t) {
+    var total = (t.te || 0) + (t.tm || 0) + (t.th || 0);
+    if (total <= 0) return 1;
+    return Math.max(1, Math.ceil(total * TOPIC_BADGE_TARGET));
+  }
+
+  function topicBadgeState(key) {
+    var t = topicState(key, null);
+    var cur = t.n || 0;
+    var target = topicTarget(t);
+    var total = (t.te || 0) + (t.tm || 0) + (t.th || 0);
+    return { earned: cur >= target, cur: cur, target: target, total: total, pct: Math.max(0, Math.min(100, Math.round((total ? cur / total : 0) * 100))) };
   }
 
   function bumpTopicSolve(o) {
@@ -162,34 +166,36 @@
     t.n++;
     t[diff]++;
     data.topics[key] = t;
+    var id = "topic-" + key;
     var bonus = 0, unlocked = [];
-    tiersEarned(t).forEach(function (k) {
-      var id = "topic-" + key + "-" + k;
-      if (data.badges.indexOf(id) === -1) {
-        data.badges.push(id);
-        unlocked.push(id);
-        bonus += TIER_BONUS[k] || 0;
-      }
-    });
-    if (bonus) data.xp += bonus;
-    return { bonus: bonus, unlocked: unlocked, tier: tiersEarned(t).length };
+    if (topicBadgeState(key).earned && data.badges.indexOf(id) === -1) {
+      data.badges.push(id);
+      unlocked.push(id);
+      bonus = 30;
+      data.xp += bonus;
+    }
+    return { bonus: bonus, unlocked: unlocked, title: t.name };
   }
 
-  function topicTiers(key) {
-    var t = topicState(key, null);
-    var earned = {};
-    tiersEarned(t).forEach(function (k) { earned[k] = true; });
-    return TOPIC_TIERS.map(function (ti) {
-      return { key: ti.key, label: ti.label, icon: ti.icon, earned: !!earned[ti.key] };
-    });
+  function topicTiers(key, name) {
+    var t = topicState(key, name);
+    var st = topicBadgeState(key);
+    var total = st.total || 1;
+    return [{
+      key: "badge",
+      label: (name || t.name || key),
+      icon: topicIcon(key, 0),
+      earned: st.earned,
+      cur: st.cur,
+      target: st.target,
+      total: total,
+      pct: st.pct
+    }];
   }
 
   function topicMedal(key) {
     if (!data.topics[key]) return "";
-    var list = topicTiers(key);
-    for (var i = list.length - 1; i >= 0; i--) {
-      if (list[i].earned) return list[i].icon;
-    }
+    if (topicBadgeState(key).earned) return topicIcon(key, 0);
     return "";
   }
 
@@ -197,11 +203,9 @@
     if (id.indexOf("topic-") === 0) {
       var parts = id.split("-");
       var key = parts[1];
-      var tierKey = parts.slice(2).join("-");
       var t = data.topics[key];
-      var ti = null;
-      for (var i = 0; i < TOPIC_TIERS.length; i++) { if (TOPIC_TIERS[i].key === tierKey) { ti = TOPIC_TIERS[i]; break; } }
-      return (ti ? ti.icon : "\uD83C\uDFC5") + " " + (t ? t.name + ": " : "Topic: ") + (ti ? ti.label : tierKey);
+      var nm = (t && t.name) || key;
+      return topicIcon(key, 0) + " " + nm;
     }
     return (BADGES[id] || "\uD83C\uDFC5") + " " + id.replace(/-/g, " ");
   }

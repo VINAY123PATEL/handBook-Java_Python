@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+local-keys.js
+*key*.json
+serviceAccountKey*.json
+firebase-debug.log
+*.firebaserc

@@ -1,4 +1,4 @@
-var CACHE = 'dsa-hub-v21';
+var CACHE = 'dsa-hub-v22';
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
@@ -13,8 +13,9 @@ self.addEventListener('install', function (event) {
         './firebase-config.js',
         './usage.js',
         './profile.js',
-        './gamify.js',
-        './icon-192.png',
+    './gamify.js',
+    './sitebot.js',
+    './icon-192.png',
         './icon-512.png',
         './pdfs/DSA_Complete_Notes.pdf',
         './pdfs/OOP_Complete_Notes.pdf',

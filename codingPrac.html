@@ -67,6 +67,7 @@
   input:focus, select:focus, textarea:focus{outline:none;border-color:var(--accent);}
   .hint{font-size:12px;color:#8B96A8;margin-top:5px;line-height:1.5;}
   .key-status{font-size:12px;color:#8B96A8;margin-top:8px;font-family:var(--mono);}
+  .switch-note{color:#0E8F7A;}
   .key-status.ok{color:#0E8F7A;}
   .key-status .sep{color:#8B96A8;margin:0 6px;}
   .admin-panel{margin-bottom:20px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
@@ -648,6 +649,7 @@ let progress = {
 let apiKey = "";
 let geminiApiKey = "";
 let geminiModel = "gemini-2.5-flash";
+const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 function activeGeminiModel(){
   return (progress.model && /^gemini-/.test(progress.model)) ? progress.model : geminiModel;
 }
@@ -1087,14 +1089,20 @@ async function sendApproach(p){
   if(sendBtn) sendBtn.disabled = true;
 
   try{
-    const systemMsg = `You are a coding assistant helping a candidate practice the DSA problem "${p.title}" (topic: ${problemIndex[p.id].topicName}).
-Problem statement: ${p.statement.replace(/<[^>]+>/g," ")}
-The candidate will describe their approach in plain words. Your ONLY job is to turn THEIR approach into clean, correct, well-commented ${progress.language} code following their exact plan and naming — do NOT silently replace it with the textbook/standard solution. If their approach is wrong or has a flaw, explain exactly why in 2-3 sentences and ask how they want to adjust, then wait — do not write the standard answer without their approval. If their approach is good, write the code that implements exactly what they described, step by step. Always end with the time and space complexity of their approach.`;
+    const systemMsg = `You are a supportive DSA **MENTOR** (interview-style coach) helping a candidate practice the problem "${p.title}" (topic: ${problemIndex[p.id].topicName}).
+
+STRICT RULES — Socratic teaching, NOT a solution-dumper:
+1. NEVER reveal the full approach, algorithm, or code on the first message. Sakriya suno, aur pehla jawab hamesha velira: (a) ek chhota HINT (intuition/high-level direction, 1-2 lines, solution ka blueprint NAHI), aur (b) 1 guiding sawaal jo candidate ko khud approach sochne pe le jaaye.
+2. Jab tak candidate apna approach/plan khud describe NA kare, tab tak code mat likho. Unka approach saamne aaye toh pehle verify karo — galat ho toh flaw ko 2-3 lines me samjhao aur poocho kaise adjust karna chahte hain (standard solution mat thopo bina approval ke). Sahi ho toh UNHI ke plan, naming aur language (${lang}) me clean, correct, well-commented code likho.
+3. Candidate ne falsafah puchha ho toh bhi - pehle unhe 1 aur moko do khud think karne ka (extra hint do), phir bhi na samjhe toh hi gradual steps me batana shuru karo (step-dar-step, puri solution ek saath mat dikhao).
+4. Edge cases, dry-run aur time/space complexity candidate ke approach ke hisaab se samjhao.
+5. Hamesha Hinglish me, encouraging tone. End me unke approach ki complexity (time + space) batao.`;
 
     const messages = [
       { role:"system", content: systemMsg },
       ...progress.chats[p.id].map(m => ({ role:m.role, content:m.content }))
     ];
+
     const reply = await callOpenRouter(apiKey, progress.model, messages, 2000);
     thinkingDiv.textContent = reply;
     progress.chats[p.id].push({ role:"assistant", content:reply });
@@ -1107,7 +1115,6 @@ The candidate will describe their approach in plain words. Your ONLY job is to t
     renderMain();
   }
 }
-
 /* ============ AI: THOROUGH CODE REVIEW ON "MARK AS SOLVED" ============ */
 
 async function runReview(p, markSolved){
@@ -1179,27 +1186,61 @@ Be specific, reference the candidate's actual code, and do not invent problems t
 /* ============ API CALL ============ */
 
 async function callOpenRouter(key, model, messages, maxTokens){
-  if (!key) return await callGemini(messages, maxTokens);
-  var reply = "";
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer " + key,
-        "HTTP-Referer":"https://claude.ai",
-        "X-Title":"DSA Practice Console (Capgemini Paper 6)"
-      },
-      body: JSON.stringify({ model: normalizeModel(model), messages, max_tokens: maxTokens || 1500, temperature: 0.3 })
-    });
-    const data = await res.json();
-    if(data.error){ throw new Error(data.error.message || "API error"); }
-    if(!data.choices || !data.choices[0]){ throw new Error("No response from model."); }
-    return data.choices[0].message.content;
-  } catch (err) {
-    console.warn("OpenRouter failed — Gemini fallback try kar raha hoon:", err.message);
-    return await callGemini(messages, maxTokens);
+  const errs = [];
+  const free = freeModelList();
+  const selected = /^gemini-/.test(progress.model || "") ? "" : normalizeModel(progress.model || "");
+  const orCands = [];
+  const pushOr = m => {
+    m = normalizeModel(m);
+    if(m && !/^gemini-/.test(m) && orCands.indexOf(m) === -1) orCands.push(m);
+  };
+  pushOr(selected);
+  free.forEach(pushOr);
+
+  if (apiKey) {
+    for (let i = 0; i < orCands.length; i++) {
+      try {
+        const out = await tryOpenRouter(orCands[i], messages, maxTokens);
+        if (orCands[i] !== selected) showModelSwitch(selected + " → " + orCands[i]);
+        return out;
+      } catch (e) {
+        errs.push("OpenRouter/" + orCands[i] + ": " + e.message);
+        console.warn("Model " + orCands[i] + " fail → agla model try:", e.message);
+      }
+    }
+  } else {
+    errs.push("OpenRouter key nahi hai");
   }
+
+  const gemList = [];
+  const pushGem = m => { if(m && gemList.indexOf(m) === -1) gemList.push(m); };
+  pushGem(activeGeminiModel());
+  GEMINI_MODELS.forEach(pushGem);
+
+  if (geminiApiKey) {
+    for (let i = 0; i < gemList.length; i++) {
+      try {
+        const out = await tryGemini(gemList[i], messages, maxTokens);
+        showModelSwitch("OpenRouter → Gemini/" + gemList[i]);
+        return out;
+      } catch (e) {
+        errs.push("Gemini/" + gemList[i] + ": " + e.message);
+        console.warn("Gemini " + gemList[i] + " fail → agla model:", e.message);
+      }
+    }
+  } else {
+    errs.push("Gemini key nahi hai");
+  }
+  updateKeyStatus();
+  throw new Error("Sab AI provider fail ho gaye — tried " + errs.length + " (last: " + (errs[errs.length - 1] || "none") + ")");
+}
+
+function showModelSwitch(info){
+  try{
+    const el = document.getElementById("keyStatus");
+    if(el) el.innerHTML = el.innerHTML + `<span class="switch-note"> ↪ ${String(info).split("/").pop()}</span>`;
+  }catch(e){ }
+  try{ if(window.Gamify && window.Gamify.showToast) window.Gamify.showToast("🔁 Auto-switch: " + info, 2600); }catch(e){ }
 }
 
 /* ============ GEMINI FALLBACK ============ */
@@ -1219,9 +1260,24 @@ function toGeminiContents(messages){
   return out;
 }
 
-async function callGemini(messages, maxTokens){
-  if (!geminiApiKey) throw new Error("Gemini API key missing — Firebase settings (geminiApiKey) daalo ya OpenRouter key check karo.");
-  const model = activeGeminiModel();
+async function tryOpenRouter(model, messages, maxTokens){
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer " + apiKey,
+      "HTTP-Referer":"https://claude.ai",
+      "X-Title":"DSA Practice Console (Capgemini Paper 6)"
+    },
+    body: JSON.stringify({ model: normalizeModel(model), messages, max_tokens: maxTokens || 1500, temperature: 0.3 })
+  });
+  const data = await res.json();
+  if(data.error){ throw new Error(data.error.message || "API error"); }
+  if(!data.choices || !data.choices[0]){ throw new Error("No response from model."); }
+  return data.choices[0].message.content;
+}
+
+async function tryGemini(model, messages, maxTokens){
   const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
   const res = await fetch(url, {
     method: "POST",
@@ -1333,5 +1389,6 @@ window.addEventListener("gamify:toast", function (e) {
 loadKeyFromFirebase();
 setTimeout(refreshGmChip, 1200);
 </script>
+<script src="sitebot.js"></script>
 </body>
 </html>

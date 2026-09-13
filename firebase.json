@@ -1,4 +1,13 @@
 {
+  "hosting": {
+    "public": ".",
+    "ignore": ["firebase.json", "firestore.rules", "firestore.indexes.json", ".gitignore", "local-keys.js", "**/.*", "README.md", "seed*.js", "*.js.orig", "**/*.orig"],
+    "headers": [
+      { "source": "**/*.js", "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }] },
+      { "source": "**/*.html", "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }] },
+      { "source": "service-worker.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    ]
+  },
   "firestore": {
     "rules": "firestore.rules"
   }
