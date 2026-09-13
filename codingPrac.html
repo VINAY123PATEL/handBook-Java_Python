@@ -417,7 +417,7 @@ let progress = {
   code: {},
   chats: {},
   reviews: {},
-  model: "gemini-2.5-flash",
+  model: "liquid/lfm-2.5-2.6b:free",
   language: "Python"
 };
 
@@ -426,6 +426,12 @@ let geminiApiKey = "";
 let geminiModel = "gemini-2.5-flash";
 function activeGeminiModel(){
   return (progress.model && /^gemini-/.test(progress.model)) ? progress.model : geminiModel;
+}
+function freeModelList(){
+  return Array.from(document.querySelectorAll("#modelSelect option")).map(o => o.value);
+}
+function normalizeModel(m){
+  return freeModelList().includes(m) ? m : "liquid/lfm-2.5-2.6b:free";
 }
 try { apiKey = sessionStorage.getItem("dsa_openrouter_key") || ""; } catch (e) { }
 let activeTopic = topics[0].key;
@@ -605,12 +611,6 @@ function renderMain(){
         <div>
           <label class="field-label">AI Model (sab free)</label>
           <select id="modelSelect">
-            <optgroup label="Gemini">
-              <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-              <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
-              <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-              <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash-Lite</option>
-            </optgroup>
             <optgroup label="OpenRouter (free)">
               <option value="liquid/lfm-2.5-2.6b:free">Liquid LFM 2.6B</option>
               <option value="google/gemma-4-31b-it:free">Gemma 4 31B</option>
@@ -649,7 +649,8 @@ function renderMain(){
     <div id="problemList"></div>
   `;
 
-  document.getElementById("modelSelect").value = progress.model;
+  document.getElementById("modelSelect").value = normalizeModel(progress.model);
+  progress.model = normalizeModel(progress.model);
   document.getElementById("modelSelect").addEventListener("change", e => { progress.model = e.target.value; saveProgress(); });
   document.getElementById("langSelect").value = progress.language;
   document.getElementById("langSelect").addEventListener("change", e => { progress.language = e.target.value; saveProgress(); });
@@ -737,6 +738,7 @@ function buildProblemCard(p){
       <div class="btn-row">
         <button class="btn-danger-ghost" id="retake-${p.id}">Retake this problem</button>
         ${hasReview ? `<button class="btn-ghost" id="recheck-${p.id}">Re-check code</button>` : ""}
+        <button class="btn-primary" id="tick-${p.id}">✓ Tick — done</button>
         <button class="btn-solve ${isSolved?"done":""}" id="solve-${p.id}">${isSolved ? "✓ Solved — click to unmark" : "Mark as solved (AI checks code)"}</button>
       </div>
     `;
@@ -773,6 +775,21 @@ function wireProblemEvents(p){
     });
   }
 
+  const tickBtn = document.getElementById(`tick-${p.id}`);
+  if(tickBtn){
+    if(progress.solved[p.id]){
+      tickBtn.disabled = true;
+      tickBtn.textContent = "✓ Done";
+    }
+    tickBtn.addEventListener("click", () => {
+      if(progress.solved[p.id]) return;
+      progress.solved[p.id] = true;
+      saveProgress();
+      renderAll();
+      if(window.Gamify) window.Gamify.award('solve', { text: "Problem done! +10 XP" });
+    });
+  }
+
   const recheckBtn = document.getElementById(`recheck-${p.id}`);
   if(recheckBtn){
     recheckBtn.addEventListener("click", () => runReview(p, false));
@@ -804,7 +821,7 @@ async function sendApproach(p){
   const text = promptEl.value.trim();
   if(!text) return;
   if(!apiKey && !geminiApiKey){
-    alert("Koi AI key nahi mili — Admin Settings se OpenRouter/Gemini key daalo ya top wale field mein apni key paste karo.");
+    alert("Koi AI key nahi mili — OpenRouter/Gemini key Firebase Console → Firestore settings/general mein daalo.");
     return;
   }
 
@@ -925,7 +942,7 @@ async function callOpenRouter(key, model, messages, maxTokens){
         "HTTP-Referer":"https://claude.ai",
         "X-Title":"DSA Practice Console (Capgemini Paper 6)"
       },
-      body: JSON.stringify({ model, messages, max_tokens: maxTokens || 1500, temperature: 0.3 })
+      body: JSON.stringify({ model: normalizeModel(model), messages, max_tokens: maxTokens || 1500, temperature: 0.3 })
     });
     const data = await res.json();
     if(data.error){ throw new Error(data.error.message || "API error"); }
