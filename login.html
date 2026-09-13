@@ -394,9 +394,19 @@
         if (user) {
           writeProfile(user, regName);
         }
-        showMsg("Account ban gaya! Redirect ho raha hai...", true);
+        try {
+          if (firebase.auth().currentUser) firebase.auth().signOut();
+        } catch (e2) { }
+        emailEl.value = email;
+        passEl.value = "";
+        pass2El.value = "";
+        setMode("login");
+        showMsg("Account ban gaya! Ab ek baar login karo — iske baad hamesha direct entry milegi.", true);
+        setTimeout(function () { emailEl.focus(); }, 60);
+      } else {
+        showMsg("Login ho gaya! Redirect ho raha hai...", true);
+        setTimeout(redirectAfterAuth, 600);
       }
-      setTimeout(redirectAfterAuth, 600);
     }).catch(function (err) {
       authTaskPending = false;
       submitBtn.disabled = false;
