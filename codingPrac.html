@@ -6,6 +6,7 @@
 <script src="firebase-config.js"></script>
 <script src="auth-gate.js"></script>
 <script src="usage.js"></script>
+<script src="profile.js"></script>
 <style>
   :root{
     --navy:#0B1E3A; --navy-2:#122B52; --steel:#3E5C86; --ink:#16233B;
@@ -129,6 +130,10 @@
   .btn-danger-ghost{background:none;border:1px solid #F0C9C9;color:var(--danger);}
   .btn-solve{background:var(--accent-dim);color:#0E8F7A;border:1px solid #9FD9CB;}
   .btn-solve.done{background:var(--accent);color:#fff;}
+  .account-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:16px;background:#101823;border:1px solid var(--line);border-radius:12px;flex-wrap:wrap;}
+  .account-bar .dsa-avatar{width:30px;height:30px;font-size:14px;}
+  .account-name{color:var(--steel);font-weight:700;font-size:13.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;}
+  .account-spacer{flex:1;}
 </style>
 </head>
 <body>
@@ -667,6 +672,13 @@ function renderMain(){
   }
 
   main.innerHTML = `
+    <div class="account-bar">
+      <div class="account-user" data-dsa-avatar></div>
+      <span class="account-name" data-dsa-name>Account</span>
+      <span class="account-spacer"></span>
+      <button class="btn-ghost" id="profileBtn" type="button">PROFILE</button>
+      <button class="btn-danger-ghost" id="logoutBtn" type="button">LOG OUT</button>
+    </div>
     <div class="top-controls">
       <div class="row">
         <div>
@@ -717,6 +729,20 @@ function renderMain(){
   updateKeyStatus();
   updateUsageStatus();
   wireAdminPanel();
+
+  const profileBtn = document.getElementById("profileBtn");
+  if(profileBtn) profileBtn.addEventListener("click", () => { if(window.DSAProfile) window.DSAProfile.showModal(); });
+  const logoutBtn = document.getElementById("logoutBtn");
+  if(logoutBtn) logoutBtn.addEventListener("click", () => {
+    try {
+      firebase.auth().signOut().then(() => {
+        localStorage.removeItem("dsa_practice_progress_v1");
+        try { sessionStorage.removeItem("dsa_openrouter_key"); } catch (err) { }
+        location.replace("login.html");
+      });
+    } catch(e){ location.replace("login.html"); }
+  });
+  if(window.DSAProfile) window.DSAProfile.render();
 
   const dismissBtn = document.getElementById("dismissResumeBtn");
   if(dismissBtn) dismissBtn.addEventListener("click", () => { resumeBannerDismissed = true; renderMain(); });

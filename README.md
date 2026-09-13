@@ -3,8 +3,9 @@
 Java ⇄ Python ⇄ C++ — DSA Learning Hub with Firebase login (email/password), hosted on GitHub Pages.
 
 - `index.html` — launcher + PDF notes library (Placement Notes)
-- `login.html` — Firebase login/register/signout gate (email + password)
+- `login.html` — Firebase login/register/signout gate (email + password). Register mein: naam, gender (male/female/other), strong password (8+ chars, upper+lower+number+special).
 - `auth-gate.js` + `firebase-config.js` — gate scripts jo har page ko login ke baad hi kholte hain
+- `profile.js` — shared Profile modal (naam edit, optional profile photo, gender, password reset email, logout). Profile data Firestore `users/{uid}` + Firebase account mein save hoti hai
 - `usage.js` — daily usage limits (Firestore per-user tracking)
 - `rosetta-dsa.html` — DSA Handbook (theory + code + quizzes, 20 chapters)
 - `leetcode-200.html` — LeetCode Top 267 (topic-wise chapters, Java + Python + C++ solutions)
@@ -12,6 +13,8 @@ Java ⇄ Python ⇄ C++ — DSA Learning Hub with Firebase login (email/password
 - `pdfs/` — complete placement notes (coloured-vector PDFs): DSA, OOP, SE, OS, COA, DBMS, CN + Cyber Security (all units combined)
 
 Live: https://vinay123patel.github.io/handBook-Java_Python/
+
+Login ek baar karne ke baad session persistent rehta hai (Firebase LOCAL persistence) — agli baar direct entry, logout sirf "LOG OUT" se hota hai (Profile modal mein bhi).
 
 Service worker (`service-worker.js`) precaches the app shell + subject PDFs for offline use.
 
@@ -33,6 +36,9 @@ service cloud.firestore {
       allow read, write: if request.auth.uid == userId;
     }
     match /progress/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+    match /users/{userId} {
       allow read, write: if request.auth.uid == userId;
     }
   }

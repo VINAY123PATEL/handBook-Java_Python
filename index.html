@@ -11,6 +11,7 @@
 <script src="firebase-config.js"></script>
 <script src="auth-gate.js"></script>
 <script src="usage.js"></script>
+<script src="profile.js"></script>
 <style>
   :root{
     --bg:#0b0e13;
@@ -99,6 +100,8 @@
     padding:6px 10px; border-radius:7px; cursor:pointer;
   }
   .userbar button:hover{ background:#3a1515; }
+  .userbar .avatar-wrap{ display:inline-flex; }
+  .userbar .dsa-avatar-xl, .userbar .dsa-avatar{ width:28px; height:28px; font-size:13px; }
   .foot{
     margin-top:44px; color:var(--muted-2); font-family:'JetBrains Mono',monospace;
     font-size:12px; text-align:center; line-height:1.8;
@@ -133,7 +136,9 @@
 <body>
 
   <div class="userbar" id="userbar" hidden>
-    <span class="email" id="userEmail"></span>
+    <span data-dsa-avatar class="userbar-avatar-wrap"></span>
+    <span class="email" data-dsa-name></span>
+    <button id="profileBtn" type="button">PROFILE</button>
     <button id="logoutBtn" type="button">LOG OUT</button>
   </div>
 
@@ -248,25 +253,34 @@
 <script>
 (function () {
   var bar = document.getElementById('userbar');
-  var emailEl = document.getElementById('userEmail');
 
-  function setBar(email) {
-    emailEl.textContent = email;
+  function setBar(user) {
     bar.hidden = false;
+    if (window.DSAProfile) {
+      window.DSAProfile.render();
+      window.DSAProfile.reload(function () { window.DSAProfile.render(); });
+    }
+    var nameEl = document.querySelector('[data-dsa-name]');
+    if (nameEl && user && (!user.displayName)) nameEl.textContent = user.email || user.uid;
   }
 
   function initUserBar() {
     try {
       firebase.auth().onAuthStateChanged(function (user) {
-        if (user) setBar(user.email || user.uid);
+        if (user) setBar(user);
       });
     } catch (e) { }
   }
+
+  document.getElementById('profileBtn').addEventListener('click', function () {
+    if (window.DSAProfile) window.DSAProfile.showModal();
+  });
 
   document.getElementById('logoutBtn').addEventListener('click', function () {
     try {
       firebase.auth().signOut().then(function () {
         localStorage.removeItem('dsa_practice_progress_v1');
+        try { sessionStorage.removeItem('dsa_openrouter_key'); } catch (e) { }
         location.replace('login.html');
       });
     } catch (e) {

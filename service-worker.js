@@ -1,4 +1,4 @@
-var CACHE = 'dsa-hub-v14';
+var CACHE = 'dsa-hub-v15';
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
@@ -12,6 +12,7 @@ self.addEventListener('install', function (event) {
         './leetcode-200.html',
         './firebase-config.js',
         './usage.js',
+        './profile.js',
         './icon-192.png',
         './icon-512.png',
         './pdfs/DSA_Complete_Notes.pdf',
