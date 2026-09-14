@@ -764,7 +764,13 @@ function updateKeyStatus(){
   const parts = [];
   if (apiKey) parts.push("OpenRouter key ✓");
   if (geminiApiKey) parts.push("Gemini key ✓");
-  if (!parts.length) parts.push("Koi AI key nahi — Admin Settings (Firestore settings/general) se daalo");
+  if (!apiKey && !geminiApiKey) {
+    let why = "Koi AI key nahi";
+    if (!window.firebase || !window.firebase.auth) why += " (Firebase SDK load ho raha hai…)";
+    else if (!firebase.auth().currentUser) why += " (login check ho raha hai…)";
+    else why += " — Firestore settings/general me openrouterApiKey ya geminiApiKey field daalo";
+    parts.push(why);
+  }
   parts.push("Model: " + progress.model);
   el.className = "key-status" + (parts.length ? " ok" : "");
   el.innerHTML = parts.join('<span class="sep">·</span>');
@@ -1073,7 +1079,7 @@ async function sendApproach(p){
   const text = promptEl.value.trim();
   if(!text) return;
   if(!apiKey && !geminiApiKey){
-    alert("Koi AI key nahi mili — OpenRouter/Gemini key Firebase Console → Firestore settings/general mein daalo.");
+    alert("Koi AI key nahi mili — Firebase Console → Firestore → settings/general doc mein ye 2 fields daalo: openrouterApiKey + geminiApiKey. Phir Ctrl+Shift+R se refresh karo.");
     return;
   }
 
@@ -1121,7 +1127,13 @@ CORE RULE — CODE FROM THEIR APPROACH (turant):
 
 async function runReview(p, markSolved){
   if(markSolved){
-    const ok = await new Promise(res => UsageTracker.canUse('coding', res));
+    let ok = true;
+    try {
+      ok = await Promise.race([
+        new Promise(res => UsageTracker.canUse('coding', res)),
+        new Promise(res => setTimeout(() => res(true), 8000))
+      ]);
+    } catch (e) { ok = true; }
     if(!ok){
       alert('Aaj ka coding quota khatam — daily limit ' + UsageTracker.getLimits().coding + ' problems (Mark as solved). Kal phir karo.');
       return;
@@ -1161,7 +1173,7 @@ async function runReview(p, markSolved){
 }
 
 async function reviewCode(p, code){
-  if(!apiKey && !geminiApiKey){ throw new Error("Koi AI key nahi mili — Admin Settings mein OpenRouter/Gemini key daalo."); }
+  if(!apiKey && !geminiApiKey){ throw new Error("Koi AI key nahi mili — Firestore settings/general doc me openrouterApiKey ya geminiApiKey field daalo, phir refresh."); }
   const lang = progress.language;
   const problem = problemIndex[p.id];
   const approach = (progress.chats[p.id] || []).filter(m=>m.role==="user").map(m=>m.content).join(" || ");
@@ -1378,40 +1390,58 @@ function loadFirestoreCompat(cb){
   if (window.firebase && window.firebase.firestore) { cb(); return; }
   var s = document.createElement("script");
   s.src = "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js";
-  s.onload = cb;
-  s.onerror = function(){ console.warn("Firestore SDK load nahi hua — key Firebase se nahi aayi."); };
+  s.onload = function(){ cb(); };
+  s.onerror = function(){ console.warn("Firestore SDK load fail — key Firebase se nahi aa payi."); cb("firestore-sdk-load-fail"); };
   document.head.appendChild(s);
 }
 
+var keyLoadAttempts = 0;
+
 function loadKeyFromFirebase(){
   try {
-    if (!window.firebase || !window.firebase.auth) return;
+    if (!window.firebase || !window.firebase.auth) {
+      if (keyLoadAttempts < 10) { keyLoadAttempts++; setTimeout(loadKeyFromFirebase, 1000); }
+      return;
+    }
     firebase.auth().onAuthStateChanged(function (user) {
       if (!user) return;
-      loadFirestoreCompat(function () {
-        try {
-          var db = firebase.firestore();
-          db.collection("settings").doc("general").get().then(function (doc) {
-            if (!doc.exists) return;
-            var d = doc.data();
-            var key = (d.openrouterApiKey || "").trim();
-            geminiApiKey = (d.geminiApiKey || "").trim();
-            if (d.geminiModel && String(d.geminiModel).trim()) geminiModel = String(d.geminiModel).trim();
-            if (!apiKey && key) {
-              apiKey = key;
-              try { sessionStorage.setItem("dsa_openrouter_key", apiKey); } catch (e) { }
-            }
+      if (window.firebase && window.firebase.firestore) {
+        fetchKeysFromFirestore();
+      } else {
+        loadFirestoreCompat(function (err) {
+          if (err) {
+            if (keyLoadAttempts < 6) { keyLoadAttempts++; setTimeout(fetchKeysFromFirestore, 1200); return; }
             updateKeyStatus();
-          }).catch(function (e) { console.warn("Firestore read failed:", e); });
-        } catch (e) { console.warn(e); }
-      });
+            return;
+          }
+          fetchKeysFromFirestore();
+        });
+      }
     });
   } catch (e) { console.warn(e); }
 }
 
+function fetchKeysFromFirestore(){
+  try {
+    var db = firebase.firestore();
+    db.collection("settings").doc("general").get().then(function (doc) {
+      var d = doc.exists ? doc.data() : {};
+      var key = String(d.openrouterApiKey || "").trim();
+      var gk = String(d.geminiApiKey || "").trim();
+      geminiApiKey = gk;
+      if (d.geminiModel && String(d.geminiModel).trim()) geminiModel = String(d.geminiModel).trim();
+      if (!apiKey && key) {
+        apiKey = key;
+        try { sessionStorage.setItem("dsa_openrouter_key", apiKey); } catch (e) { }
+      }
+      updateKeyStatus();
+    }).catch(function (e) { console.warn("Firestore read failed:", e); updateKeyStatus(); });
+  } catch (e) { console.warn(e); updateKeyStatus(); }
+}
+
 window.addEventListener('auth:ready', function () {
   loadKeyFromFirebase();
-  setTimeout(function(){ updateUsageStatus(); }, 400);
+  setTimeout(function(){ updateKeyStatus(); updateUsageStatus(); }, 500);
 });
 
 function refreshGmChip(){
