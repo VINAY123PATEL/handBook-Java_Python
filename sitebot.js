@@ -113,7 +113,7 @@
   async function callOpenRouter(key, model, messages, maxTokens) {
     const headers = { "Content-Type": "application/json", "Authorization": "Bearer " + key, "HTTP-Referer": "https://claude.ai", "X-Title": "DSA Hub Bot" };
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 45000);
+    const timer = setTimeout(() => ctrl.abort(), 30000);
     try {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST", headers: headers,
@@ -147,7 +147,7 @@
   async function callGemini(model, messages, maxTokens) {
     const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 45000);
+    const timer = setTimeout(() => ctrl.abort(), 30000);
     try {
       const res = await fetch(url, {
         method: "POST",
@@ -160,7 +160,7 @@
       if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) throw new Error("Gemini: empty response");
       return data.candidates[0].content.parts.map(p => p.text || "").join("");
     } catch (e) {
-      if (e && e.name === "AbortError") throw new Error("Timeout (45s) — " + model + " ne reply nahi diya");
+      if (e && e.name === "AbortError") throw new Error("Timeout (30s) — " + model + " ne reply nahi diya");
       throw e;
     } finally {
       clearTimeout(timer);
@@ -169,9 +169,8 @@
 
   SB.send = async function (messages, maxTokens) {
     const errs = [];
-    const orCands = [];
-    FREE_OR.forEach(function (m) { if (orCands.indexOf(m) === -1) orCands.push(m); });
     if (orKey) {
+      const orCands = FREE_OR.slice(0, 3);
       for (let i = 0; i < orCands.length; i++) {
         try { return await callOpenRouter(orKey, orCands[i], messages, maxTokens || 2000); }
         catch (e) { errs.push("OR/" + orCands[i] + ": " + e.message); }
@@ -179,7 +178,7 @@
     }
     if (gemKey) {
       const gemList = []; if (gemModel) gemList.push(gemModel); GEMINI_MODELS.forEach(m => { if (gemList.indexOf(m) === -1) gemList.push(m); });
-      for (let i = 0; i < gemList.length; i++) {
+      for (let i = 0; i < Math.min(2, gemList.length); i++) {
         try { return await callGemini(gemList[i], messages, maxTokens || 2000); }
         catch (e) { errs.push("Gemini/" + gemList[i] + ": " + e.message); }
       }

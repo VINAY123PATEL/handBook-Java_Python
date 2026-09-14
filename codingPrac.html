@@ -834,6 +834,7 @@ function renderRail(){
 function renderMain(){
   const topic = topics.find(t => t.key === activeTopic);
   const main = document.getElementById("main");
+  const gmInfo = window.Gamify ? window.Gamify.levelInfo(window.Gamify.data().xp) : null;
 
   let resumeBanner = "";
   if(!resumeBannerDismissed && solvedCount() > 0){
@@ -842,8 +843,6 @@ function renderMain(){
       <button class="btn-ghost" id="dismissResumeBtn">Got it</button>
     </div>`;
   }
-
-  const gmInfo = window.Gamify ? window.Gamify.levelInfo(window.Gamify.data().xp) : null;
 
   main.innerHTML = `
     <div class="account-bar">
@@ -1206,16 +1205,17 @@ async function callOpenRouter(key, model, messages, maxTokens){
   };
   pushOr(selected);
   free.forEach(pushOr);
+  const orCandsCapped = orCands.slice(0, 3);
 
   if (apiKey) {
-    for (let i = 0; i < orCands.length; i++) {
+    for (let i = 0; i < orCandsCapped.length; i++) {
       try {
-        const out = await tryOpenRouter(orCands[i], messages, maxTokens);
-        if (orCands[i] !== selected) showModelSwitch(selected + " → " + orCands[i]);
+        const out = await tryOpenRouter(orCandsCapped[i], messages, maxTokens);
+        if (orCandsCapped[i] !== selected) showModelSwitch(selected + " → " + orCandsCapped[i]);
         return out;
       } catch (e) {
-        errs.push("OpenRouter/" + orCands[i] + ": " + e.message);
-        console.warn("Model " + orCands[i] + " fail → agla model try:", e.message);
+        errs.push("OpenRouter/" + orCandsCapped[i] + ": " + e.message);
+        console.warn("Model " + orCandsCapped[i] + " fail → agla model try:", e.message);
       }
     }
   } else {
@@ -1228,7 +1228,7 @@ async function callOpenRouter(key, model, messages, maxTokens){
   GEMINI_MODELS.forEach(pushGem);
 
   if (geminiApiKey) {
-    for (let i = 0; i < gemList.length; i++) {
+    for (let i = 0; i < Math.min(2, gemList.length); i++) {
       try {
         const out = await tryGemini(gemList[i], messages, maxTokens);
         showModelSwitch("OpenRouter → Gemini/" + gemList[i]);
@@ -1272,7 +1272,7 @@ function toGeminiContents(messages){
 
 async function tryOpenRouter(model, messages, maxTokens){
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 45000);
+  const timer = setTimeout(() => ctrl.abort(), 30000);
   try {
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method:"POST",
@@ -1290,7 +1290,7 @@ async function tryOpenRouter(model, messages, maxTokens){
     if(!data.choices || !data.choices[0]){ throw new Error("No response from model."); }
     return data.choices[0].message.content;
   } catch (e) {
-    if (e && e.name === "AbortError") throw new Error("Timeout (75s) — " + model + " ne reply nahi diya");
+    if (e && e.name === "AbortError") throw new Error("Timeout (30s) — " + model + " ne reply nahi diya");
     throw e;
   } finally {
     clearTimeout(timer);
@@ -1300,7 +1300,7 @@ async function tryOpenRouter(model, messages, maxTokens){
 async function tryGemini(model, messages, maxTokens){
   const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 45000);
+  const timer = setTimeout(() => ctrl.abort(), 30000);
   try {
     const res = await fetch(url, {
       method: "POST",
@@ -1318,7 +1318,7 @@ async function tryGemini(model, messages, maxTokens){
     }
     return data.candidates[0].content.parts.map(p => p.text || "").join("");
   } catch (e) {
-    if (e && e.name === "AbortError") throw new Error("Timeout (75s) — " + model + " ne reply nahi diya");
+    if (e && e.name === "AbortError") throw new Error("Timeout (30s) — " + model + " ne reply nahi diya");
     throw e;
   } finally {
     clearTimeout(timer);
