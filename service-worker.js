@@ -1,4 +1,4 @@
-var CACHE = 'dsa-hub-v26';
+var CACHE = 'dsa-hub-v27';
 
 self.addEventListener('install', function (event) {
   event.waitUntil(

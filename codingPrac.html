@@ -1033,8 +1033,10 @@ function wireProblemEvents(p){
     tickBtn.addEventListener("click", () => {
       if(progress.solved[p.id]) return;
       progress.solved[p.id] = true;
-      if(window.Gamify) window.Gamify.award('solve', Object.assign({ text: "Problem done! +10 XP" }, topicMetaFor(p)));
-      saveProgress();
+      try {
+        if(window.Gamify) window.Gamify.award('solve', Object.assign({ text: "Problem done! +10 XP" }, topicMetaFor(p)));
+      } catch(e) { console.warn("Gamify award failed:", e); }
+      try { saveProgress(); } catch(e) { console.warn("saveProgress failed:", e); }
       renderAll();
     });
   }
@@ -1328,8 +1330,18 @@ async function tryGemini(model, messages, maxTokens){
 /* ============ RENDER ALL ============ */
 
 function renderAll(){
-  renderRail();
-  renderMain();
+  try {
+    renderRail();
+    renderMain();
+  } catch (e) {
+    console.error("Render error:", e);
+    try {
+      const main = document.getElementById("main");
+      if (main) {
+        main.innerHTML = `<div class="review-box bad"><b>Page render error</b><pre class="review-text">${escapeHtml(e && e.message ? e.message : String(e))}</pre><div class="hint">Ye galat data/old cache se ho sakta hai. Ctrl+Shift+R se hard refresh karo. Agar phir bhi aaye, Retake all karke try karo.</div></div>`;
+      }
+    } catch (e2) { }
+  }
 }
 
 /* ============ RETAKE ALL ============ */
