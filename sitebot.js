@@ -112,14 +112,24 @@
   /* ---------- API CALLS (same failover chain as codingPrac) ---------- */
   async function callOpenRouter(key, model, messages, maxTokens) {
     const headers = { "Content-Type": "application/json", "Authorization": "Bearer " + key, "HTTP-Referer": "https://claude.ai", "X-Title": "DSA Hub Bot" };
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST", headers: headers,
-      body: JSON.stringify({ model: model, messages: messages, max_tokens: maxTokens || 2000, temperature: 0.4 })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message || "OpenRouter API error");
-    if (!data.choices || !data.choices[0]) throw new Error("Empty response from " + model);
-    return data.choices[0].message.content;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 45000);
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST", headers: headers,
+        body: JSON.stringify({ model: model, messages: messages, max_tokens: maxTokens || 2000, temperature: 0.4 }),
+        signal: ctrl.signal
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message || "OpenRouter API error");
+      if (!data.choices || !data.choices[0]) throw new Error("Empty response from " + model);
+      return data.choices[0].message.content;
+    } catch (e) {
+      if (e && e.name === "AbortError") throw new Error("Timeout (45s) — " + model + " ne reply nahi diya");
+      throw e;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   function toGeminiContents(messages) {
@@ -136,15 +146,25 @@
 
   async function callGemini(model, messages, maxTokens) {
     const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": gemKey },
-      body: JSON.stringify({ contents: toGeminiContents(messages), generationConfig: { temperature: 0.4, maxOutputTokens: maxTokens || 2000 } })
-    });
-    const data = await res.json();
-    if (data && data.error) throw new Error(data.error.message || "Gemini API error");
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) throw new Error("Gemini: empty response");
-    return data.candidates[0].content.parts.map(p => p.text || "").join("");
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 45000);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": gemKey },
+        body: JSON.stringify({ contents: toGeminiContents(messages), generationConfig: { temperature: 0.4, maxOutputTokens: maxTokens || 2000 } }),
+        signal: ctrl.signal
+      });
+      const data = await res.json();
+      if (data && data.error) throw new Error(data.error.message || "Gemini API error");
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) throw new Error("Gemini: empty response");
+      return data.candidates[0].content.parts.map(p => p.text || "").join("");
+    } catch (e) {
+      if (e && e.name === "AbortError") throw new Error("Timeout (45s) — " + model + " ne reply nahi diya");
+      throw e;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   SB.send = async function (messages, maxTokens) {
