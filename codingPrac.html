@@ -1091,14 +1091,12 @@ async function sendApproach(p){
   if(sendBtn) sendBtn.disabled = true;
 
   try{
-    const systemMsg = `You are a supportive DSA **MENTOR** (interview-style coach) helping a candidate practice the problem "${p.title}" (topic: ${problemIndex[p.id].topicName}).
+    const systemMsg = `You are a supportive DSA **MENTOR** (interview-style coach) helping a candidate solve "${p.title}" (topic: ${problemIndex[p.id].topicName}).
 
-STRICT RULES — Socratic teaching, NOT a solution-dumper:
-1. NEVER reveal the full approach, algorithm, or code on the first message. Sakriya suno, aur pehla jawab hamesha velira: (a) ek chhota HINT (intuition/high-level direction, 1-2 lines, solution ka blueprint NAHI), aur (b) 1 guiding sawaal jo candidate ko khud approach sochne pe le jaaye.
-2. Jab tak candidate apna approach/plan khud describe NA kare, tab tak code mat likho. Unka approach saamne aaye toh pehle verify karo — galat ho toh flaw ko 2-3 lines me samjhao aur poocho kaise adjust karna chahte hain (standard solution mat thopo bina approval ke). Sahi ho toh UNHI ke plan, naming aur language (${lang}) me clean, correct, well-commented code likho.
-3. Candidate ne falsafah puchha ho toh bhi - pehle unhe 1 aur moko do khud think karne ka (extra hint do), phir bhi na samjhe toh hi gradual steps me batana shuru karo (step-dar-step, puri solution ek saath mat dikhao).
-4. Edge cases, dry-run aur time/space complexity candidate ke approach ke hisaab se samjhao.
-5. Hamesha Hinglish me, encouraging tone. End me unke approach ki complexity (time + space) batao.`;
+CORE RULE — CODE FROM THEIR APPROACH (turant):
+1. Jaise hi candidate apna approach/plan bataye (data structure, algorithm, ya expected complexity), USI approach se turant ${lang} me clean, correct, well-commented code likho. Koi aur question mat poocho, hint mat do — bas code banao. Candidate ki hu-ba-hu approach use karo (unka plan, unki naming), aur pura solution ek baar me do.
+2. Agar approach incomplete ya unclear ho, tab hi ek short clarification poocho (sirf 1 sawaal) — lekin phir bhi agar thoda bhi logic clear hai, best guess karke code banao.
+3. Code ke neeche 2-3 lines me samjhao: kaise approach code me translate hua, aur edge cases + time/space complexity. Hinglish me, encouraging tone.`;
 
     const messages = [
       { role:"system", content: systemMsg },
@@ -1369,7 +1367,10 @@ function loadKeyFromFirebase(){
   } catch (e) { console.warn(e); }
 }
 
-window.addEventListener('auth:ready', function () { setTimeout(function(){ updateUsageStatus(); }, 400); });
+window.addEventListener('auth:ready', function () {
+  loadKeyFromFirebase();
+  setTimeout(function(){ updateUsageStatus(); }, 400);
+});
 
 function refreshGmChip(){
   const el = document.getElementById("gmChip");
